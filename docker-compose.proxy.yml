@@ -1,0 +1,24 @@
+# For servers where api.telegram.org is blocked (e.g. a VPS in Russia): run an xray client next to the
+# server and send the bot's HTTPS through it. Sync (port 7300) stays direct.
+#
+#   put an xray client config in ./proxy/config.json (inbound "http" on :8080), then
+#   docker compose -f docker-compose.server.yml -f docker-compose.proxy.yml up -d --build
+services:
+  proxy:
+    image: teddysun/xray:latest
+    restart: unless-stopped
+    volumes:
+      - ./proxy/config.json:/etc/xray/config.json:ro
+    expose:
+      - "8080"
+
+  memebooru:
+    depends_on:
+      - proxy
+    environment:
+      # libcurl (URLSession on Linux) honours these; only the bot's HTTP traffic uses them.
+      https_proxy: http://proxy:8080
+      HTTPS_PROXY: http://proxy:8080
+      # archive.org is reachable from the VPS itself; a shared VPN exit only shares its rate limit.
+      no_proxy: archive.org,web.archive.org
+      NO_PROXY: archive.org,web.archive.org

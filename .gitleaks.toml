@@ -1,0 +1,19 @@
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Swift type declaration, not a credential value"
+condition = "AND"
+paths = ['''Sources/MemebooruCore/Sync/SecureChannel\.swift$''']
+regexTarget = "line"
+regexes = ['''^\s*public let privateKey: Curve25519\.KeyAgreement\.PrivateKey\s*$''']
+
+[[allowlists]]
+description = "Unmodified SQLite API macro names and a row-id comparison"
+condition = "AND"
+paths = ['''Sources/CSQLite/(sqlite3\.c|include/sqlite3ext\.h)$''']
+regexTarget = "line"
+regexes = [
+  '''^#define sqlite3_(column_bytes16|soft_heap_limit64|hard_heap_limit64)\s+sqlite3_api->(column_bytes16|soft_heap_limit64|hard_heap_limit64)\s*$''',
+  '''^\s*if\( iKey==FTS5_AVERAGES_ROWID \)\{\s*$'''
+]

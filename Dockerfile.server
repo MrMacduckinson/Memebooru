@@ -1,0 +1,36 @@
+# memebooru-server: sync server + Telegram bot for a VPS.
+#
+#   docker build -f Dockerfile.server -t memebooru-server .
+#   docker run -d --name memebooru -p 7300:7300 -v memebooru-data:/data \
+#     -e TELEGRAM_BOT_TOKEN=… -e TELEGRAM_ALLOWED_USERS=123456789 memebooru-server
+#
+# Everything the server keeps (collection + its stable machine id) lives in /data.
+
+FROM swift:6.2-noble AS build
+WORKDIR /src
+COPY Package.swift Package.resolved* ./
+RUN swift package resolve
+COPY Sources ./Sources
+COPY Tests ./Tests
+RUN --mount=type=cache,target=/src/.build \
+    swift build -c release --product memebooru-server --static-swift-stdlib \
+ && swift build -c release --product memebooru --static-swift-stdlib \
+ && mkdir -p /out && cp .build/release/memebooru-server .build/release/memebooru /out/
+
+FROM ubuntu:24.04
+# ffmpeg: video duration/frames for thumbnails & hashes; librsvg2-bin: SVG → PNG;
+# pango1.0-tools + Noto fonts: tweets drawn as pictures for the bot (any script, colour emoji);
+# ca-certificates: HTTPS to Telegram/x.com.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends ffmpeg librsvg2-bin pango1.0-tools fonts-noto-core fonts-noto-color-emoji ca-certificates libcurl4 libxml2 tzdata \
+ && rm -rf /var/lib/apt/lists/* \
+ && useradd --system --home /data --shell /usr/sbin/nologin memebooru \
+ && mkdir -p /data && chown memebooru /data
+COPY --from=build /out/memebooru-server /out/memebooru /usr/local/bin/
+USER memebooru
+ENV MEMEBOORU_COLLECTION=/data/collection.memebooru \
+    MEMEBOORU_SYNC_PORT=7300 \
+    HOME=/data
+VOLUME /data
+EXPOSE 7300
+ENTRYPOINT ["memebooru-server"]

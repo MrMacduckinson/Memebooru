@@ -1,0 +1,10 @@
+# Portability gate: core + CLI must build and pass tests on Linux.
+# .build lives in a BuildKit cache mount, so the image stays small and rebuilds are incremental.
+FROM swift:6.2-noble
+# rsvg-convert + ffmpeg: SVG rasterising and format conversion (MemebooruPlatformTests)
+RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends librsvg2-bin ffmpeg pango1.0-tools fonts-noto-core fonts-noto-color-emoji >/dev/null && rm -rf /var/lib/apt/lists/*
+WORKDIR /src
+COPY Package.swift Package.resolved* ./
+COPY Sources ./Sources
+COPY Tests ./Tests
+RUN --mount=type=cache,target=/src/.build swift build && swift test

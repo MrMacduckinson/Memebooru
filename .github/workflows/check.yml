@@ -1,0 +1,22 @@
+name: Checks
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test Tests/Web/gallery.test.mjs
+      - run: pip install "Pillow>=11,<13"
+      - run: python3 -m unittest discover -s Tests/Web -p 'test_*.py'
+      - run: docker build -f Dockerfile.web -t memebooru-web .
+  gallery:
+    runs-on: ubuntu-latest
+    container: swift:6.2-noble
+    steps:
+      - uses: actions/checkout@v4
+      - run: swift test --jobs 2 --filter GalleryTests

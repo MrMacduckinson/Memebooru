@@ -1,0 +1,26 @@
+{
+    auto_https off
+    admin off
+}
+:8080 {
+    root * /srv
+    encode zstd gzip
+    header {
+        X-Content-Type-Options nosniff
+        Referrer-Policy strict-origin-when-cross-origin
+        X-Frame-Options DENY
+        Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
+    }
+    @images path /media/* /thumbs/*
+    header @images Cache-Control "public, max-age=31536000, immutable"
+    @catalogue path /catalogue.json
+    header @catalogue Cache-Control "public, max-age=60, must-revalidate"
+    @ui path / /index.html /app.js /style.css
+    header @ui Cache-Control "no-cache"
+    # Explicitly expose only the public export. Unknown paths never fall back to a file browser.
+    @allowed path / /index.html /app.js /style.css /catalogue.json /media/* /thumbs/*
+    handle @allowed {
+        file_server
+    }
+    respond 404
+}

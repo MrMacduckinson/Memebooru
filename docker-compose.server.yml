@@ -1,0 +1,20 @@
+# On the VPS:  cp .env.example .env  (fill it in)  →  docker compose -f docker-compose.server.yml up -d --build
+services:
+  memebooru:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    restart: unless-stopped
+    ports:
+      - "7300:7300"          # device sync (encrypted; pairing needs the code from `docker logs` or /code)
+    volumes:
+      - memebooru-data:/data
+    environment:
+      MEMEBOORU_NAME: ${MEMEBOORU_NAME:-memebooru-server}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_ALLOWED_USERS: ${TELEGRAM_ALLOWED_USERS:-}
+      TELEGRAM_CACHE_CHAT: ${TELEGRAM_CACHE_CHAT:-}
+      TZ: ${TZ:-UTC}                # time shown on tweets the bot draws
+
+volumes:
+  memebooru-data:

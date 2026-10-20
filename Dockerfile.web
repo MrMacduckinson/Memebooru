@@ -1,0 +1,7 @@
+FROM caddy:2-alpine
+# Port 8080 needs no capability; remove the upstream binary capability for cap_drop: ALL.
+RUN setcap -r /usr/bin/caddy
+COPY deploy/Caddyfile /etc/caddy/Caddyfile
+COPY Web /srv
+# The publish directory is mounted at /srv read-only by Compose.
+EXPOSE 8080
