@@ -41,6 +41,8 @@ python scripts/wallpapers/download.py /path/to/FrutigerAeroCollection \
 
 Импорт в новую нативную коллекцию всегда проходит через **Входящие**:
 
+Для полного экспорта этой коллекции на Linux установите `ffmpeg` и `ffprobe` (в Debian/Ubuntu: `sudo apt-get install --no-install-recommends ffmpeg`). Три JPEG не читаются встроенным Linux-декодером; существующий резервный декодер FFmpeg создаёт для них превью, не изменяя оригиналы. Dockerfile.server уже включает FFmpeg. На сервере готового статического сайта FFmpeg не нужен.
+
 ```sh
 swift build -c release --product memebooru
 # Путь к executable: swift build -c release --show-bin-path
