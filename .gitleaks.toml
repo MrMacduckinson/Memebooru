@@ -14,6 +14,6 @@ condition = "AND"
 paths = ['''Sources/CSQLite/(sqlite3\.c|include/sqlite3ext\.h)$''']
 regexTarget = "line"
 regexes = [
-  '''^#define sqlite3_(column_bytes16|soft_heap_limit64|hard_heap_limit64)\s+sqlite3_api->(column_bytes16|soft_heap_limit64|hard_heap_limit64)\s*$''',
+  '''^\+?#define sqlite3_(column_bytes16|soft_heap_limit64|hard_heap_limit64)\s+sqlite3_api->(column_bytes16|soft_heap_limit64|hard_heap_limit64)\s*$''',
   '''^\s*if\( iKey==FTS5_AVERAGES_ROWID \)\{\s*$'''
 ]
