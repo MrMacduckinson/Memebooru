@@ -14,9 +14,9 @@ services:
         read_only: true
     read_only: true
     tmpfs:
-      - /config
-      - /data
-      - /tmp
+      - /config:uid=1000,gid=1000,mode=0700
+      - /data:uid=1000,gid=1000,mode=0700
+      - /tmp:mode=1777
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
     mem_limit: 256m
