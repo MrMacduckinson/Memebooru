@@ -30,6 +30,23 @@ with sync_playwright() as p:
  assert page.locator('.intro').count()==0
  assert page.locator('.thumb-box').first.bounding_box()['height']==150
  if len(sys.argv)>3: page.screenshot(path=str(Path(sys.argv[3])/'gallery.png'))
+ search=page.locator('#search')
+ search.fill('4k_')
+ page.wait_for_selector('#search-suggestions li')
+ assert search.get_attribute('aria-expanded')=='true'
+ chosen=page.locator('#search-suggestions li span').first.inner_text()
+ assert chosen.startswith('4k_')
+ search.press('ArrowDown');search.press('Enter')
+ assert search.input_value()==chosen+' '
+ assert not page.locator('#search-suggestions').is_visible()
+ page.locator('#collection').click()
+ search.fill('metalheart -4k_')
+ page.locator('#search-suggestions li').first.click()
+ assert search.input_value()=='metalheart -'+chosen+' '
+ search.fill('"4k_');assert not page.locator('#search-suggestions').is_visible()
+ search.fill('4k_');search.press('Escape');assert not page.locator('#search-suggestions').is_visible()
+ search.fill('4k_');page.locator('#page-title').click();assert not page.locator('#search-suggestions').is_visible()
+ page.locator('#collection').click()
  page.locator('.card-open').first.click();assert page.locator('#detail').is_visible()
  wait_images(page, "#full-image")
  assert page.locator('#filters').is_visible() and not page.locator('#gallery').is_visible()
@@ -79,6 +96,12 @@ with sync_playwright() as p:
  assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
  wait_images(page, ".card:nth-child(-n+4) img")
  assert page.locator('.card img').first.evaluate('i => Math.abs(i.width / i.height - i.naturalWidth / i.naturalHeight) < .03')
+ search.fill('4k_');page.wait_for_selector('#search-suggestions li')
+ box=page.locator('#search-suggestions').bounding_box()
+ assert box['x']>=0 and box['x']+box['width']<=390
+ page.locator('#search-suggestions li').first.click()
+ assert search.input_value()==chosen+' '
+ page.locator('#reset').click()
  if len(sys.argv)>3: page.screenshot(path=str(Path(sys.argv[3])/'mobile.png'))
  page.locator('#filters-toggle').click();assert page.locator('#filters').is_visible()
  page.locator('#drawer-shade').click(position={'x':300,'y':200});assert not page.locator('#filters').is_visible()

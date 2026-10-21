@@ -28,6 +28,16 @@ export function matches(item, state) {
     )
   );
 }
+export function tagSuggestions(query, counts) {
+  const token = query.match(/(?:^|\s)(-?)([^\s"]+)$/);
+  if (!token || query.split('"').length % 2 === 0) return [];
+  const prefix = token[2].toLocaleLowerCase("en");
+  return [...counts]
+    .filter(([tag]) => tag.toLocaleLowerCase("en").startsWith(prefix) && tag.toLocaleLowerCase("en") !== prefix)
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "en"))
+    .slice(0, 12)
+    .map(([tag, count]) => ({ tag, count, query: query.slice(0, query.length - token[2].length) + tag + " " }));
+}
 export function safeMedia(path) {
   return (
     typeof path === "string" &&
@@ -124,10 +134,8 @@ if (typeof document !== "undefined") {
     $("gallery").scrollTop = 0;
     render();
   }
+  const counts = new Map();
   function renderTags() {
-    const counts = new Map();
-    for (const item of items)
-      for (const tag of item.tags) counts.set(tag, (counts.get(tag) || 0) + 1);
     const query = $("tag-search").value.toLocaleLowerCase("en");
     $("tag-count").textContent = counts.size;
     $("tag-list").replaceChildren(
@@ -343,8 +351,63 @@ if (typeof document !== "undefined") {
       }
     }
   });
+  const search = $("search"), suggestions = $("search-suggestions");
+  let completions = [], activeSuggestion = -1;
+  function hideSuggestions() {
+    suggestions.hidden = true;
+    search.setAttribute("aria-expanded", "false");
+    search.removeAttribute("aria-activedescendant");
+    activeSuggestion = -1;
+  }
+  function completeSuggestion(index) {
+    search.value = completions[index].query;
+    hideSuggestions();
+    $("search-form").requestSubmit();
+    search.focus();
+  }
+  function updateSuggestions() {
+    hideSuggestions();
+    // Complete the final token, matching the native search field.
+    completions = search.selectionStart === search.value.length
+      ? tagSuggestions(search.value, counts) : [];
+    if (document.activeElement !== search || !completions.length) return;
+    suggestions.replaceChildren(...completions.map((item, index) => {
+      const row = element("li");
+      row.id = "search-suggestion-" + index;
+      row.setAttribute("role", "option");
+      row.setAttribute("aria-selected", "false");
+      row.append(element("span", item.tag), element("small", item.count));
+      row.onpointerdown = (event) => event.preventDefault();
+      row.onclick = () => completeSuggestion(index);
+      return row;
+    }));
+    suggestions.hidden = false;
+    search.setAttribute("aria-expanded", "true");
+  }
+  search.addEventListener("input", updateSuggestions);
+  search.addEventListener("focus", updateSuggestions);
+  search.addEventListener("click", updateSuggestions);
+  search.addEventListener("blur", hideSuggestions);
+  search.addEventListener("keydown", (event) => {
+    if (event.isComposing || suggestions.hidden) return;
+    if (event.key === "Escape") {
+      event.preventDefault();
+      hideSuggestions();
+    } else if (["ArrowDown", "ArrowUp"].includes(event.key)) {
+      event.preventDefault();
+      activeSuggestion = (activeSuggestion + (event.key === "ArrowDown" ? 1 : activeSuggestion < 0 ? 0 : -1) + completions.length) % completions.length;
+      [...suggestions.children].forEach((row, index) => row.setAttribute("aria-selected", String(index === activeSuggestion)));
+      const row = suggestions.children[activeSuggestion];
+      search.setAttribute("aria-activedescendant", row.id);
+      row.scrollIntoView({ block: "nearest" });
+    } else if (event.key === "Enter" && activeSuggestion >= 0) {
+      event.preventDefault();
+      completeSuggestion(activeSuggestion);
+    }
+  });
   $("search-form").onsubmit = (e) => {
     e.preventDefault();
+    hideSuggestions();
     close();
     setDrawer(false);
     state.query = $("search").value;
@@ -436,6 +499,7 @@ if (typeof document !== "undefined") {
         !safeMedia(item.thumb) ||
         !safeSource(item.sourcePage) ||
         !Array.isArray(item.tags) ||
+        !item.tags.every((tag) => typeof tag === "string") ||
         typeof item.title !== "string" ||
         typeof item.category !== "string" ||
         !Number.isFinite(item.bytes) ||
@@ -443,6 +507,8 @@ if (typeof document !== "undefined") {
         !Number.isFinite(item.height)
       )
         throw new Error("invalid catalogue");
+    for (const item of items)
+      for (const tag of new Set(item.tags)) counts.set(tag, (counts.get(tag) || 0) + 1);
     const categories = [...new Set(items.map((x) => x.category))].sort();
     for (const cat of categories) {
       const o = element("option", cat.replaceAll("_", " "));

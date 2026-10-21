@@ -2,7 +2,7 @@
 
 A local collection of pictures, GIFs, videos, audio, text and tweets with tags, search, staging, deduplication and sync. The native macOS/iOS application and web gallery use English.
 
-The web gallery exposes **one explicitly published collection**. Search titles and tags, combine tags, exclude exact tag names (`-anime`; `-l` does not exclude `yellow`), filter by category/orientation/resolution, sort, save browser-local favorites and download originals. The layout follows the native application: header search, a 208 px sidebar, uncropped thumbnails in 150 px areas, and an inline detail page. Images load progressively as you scroll. On phones, the sidebar becomes a drawer. Arrow keys navigate images; Escape and browser Back return to the gallery. Changing images clears the previous image immediately while the next loads.
+The web gallery exposes **one explicitly published collection**. Search titles and tags with prefix suggestions (including `-` exclusions; select with the pointer or arrow keys and Enter), combine tags, exclude exact tag names (`-anime`; `-l` does not exclude `yellow`), filter by category/orientation/resolution, sort, save browser-local favorites and download originals. The layout follows the native application: header search, a 208 px sidebar, uncropped thumbnails in 150 px areas, and an inline detail page. Images load progressively as you scroll. On phones, the sidebar becomes a drawer. Arrow keys navigate images; Escape and browser Back return to the gallery. Changing images clears the previous image immediately while the next loads.
 
 The gallery is read-only. Importing, editing and syncing remain in the native app/CLI. A static server and CDN can serve the public export without exposing the database.
 

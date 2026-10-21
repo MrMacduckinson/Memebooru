@@ -5,7 +5,7 @@ const source = await readFile(
   new URL("../../Web/app.js", import.meta.url),
   "utf8",
 );
-const { tokens, matches, safeMedia, safeSource } = await import(
+const { tokens, matches, safeMedia, safeSource, tagSuggestions } = await import(
   "data:text/javascript;base64," + Buffer.from(source).toString("base64")
 );
 const item = {
@@ -111,4 +111,14 @@ test("excluded tags match whole names, not substrings or title/category text", (
     ),
     false,
   );
+});
+
+test("tag suggestions complete prefixes, preserve exclusions and ignore phrases", () => {
+  const counts = new Map([["4k_wallpaper", 12], ["4k_ultra", 20], ["sky", 30]]);
+  assert.deepEqual(tagSuggestions("4K_", counts).map(x => x.tag), ["4k_ultra", "4k_wallpaper"]);
+  assert.equal(tagSuggestions("sky -4k_", counts)[0].query, "sky -4k_ultra ");
+  for (const query of ["", "-", "sky ", '"blue sky', '"4k_', "4k_ultra", "unknown"])
+    assert.deepEqual(tagSuggestions(query, counts), []);
+  assert.equal(tagSuggestions('"blue sky" 4k_', counts).length, 2);
+  assert.equal(tagSuggestions("t", new Map(Array.from({length: 20}, (_, i) => ["tag"+i, i]))).length, 12);
 });
