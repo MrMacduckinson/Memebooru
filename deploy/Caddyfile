@@ -15,10 +15,10 @@
     header @images Cache-Control "public, max-age=31536000, immutable"
     @catalogue path /catalogue.json
     header @catalogue Cache-Control "public, max-age=60, must-revalidate"
-    @ui path / /index.html /app.js /style.css
+    @ui path / /index.html /app.js /style.css /favicon.svg
     header @ui Cache-Control "no-cache"
     # Explicitly expose only the public export. Unknown paths never fall back to a file browser.
-    @allowed path / /index.html /app.js /style.css /catalogue.json /media/* /thumbs/*
+    @allowed path / /index.html /app.js /style.css /favicon.svg /catalogue.json /media/* /thumbs/*
     handle @allowed {
         file_server
     }

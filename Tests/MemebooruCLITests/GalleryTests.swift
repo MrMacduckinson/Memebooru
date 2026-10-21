@@ -13,7 +13,7 @@ import MemebooruCore
             file: "originals/image.png", sha256: MediaStore.sha256(of: data), bytes: Int64(data.count), width: 64, height: 64,
             tags: ["обои", "узор", "клетка", "монохромный"])
         let manifest = try d.write("tagged.json", JSONEncoder().encode(GalleryCatalogue(source: item.sourcePage, items: [item])))
-        for file in ["index.html", "app.js", "style.css"] { try d.write("web/" + file, Data("test".utf8)) }
+        for file in ["index.html", "app.js", "style.css", "favicon.svg"] { try d.write("web/" + file, Data("test".utf8)) }
         var r = await c.run("gallery", "import", manifest.path)
         #expect(r.ok, "\(r)")
         let col = try c.open()
@@ -34,6 +34,7 @@ import MemebooruCore
         try col.memes.addTag(publicID, "private_tag")
         r = await c.run("gallery", "publish", manifest.path, "--output", d.path("public"), "--web", d.path("web"))
         #expect(r.ok, "\(r)")
+        #expect(try String(contentsOfFile: d.path("public/favicon.svg"), encoding: .utf8) == "test")
         let encoded = try String(contentsOfFile: d.path("public/catalogue.json"), encoding: .utf8)
         #expect(!encoded.contains("private_tag") && !encoded.contains("PRIVATE_SENTINEL"))
         let exported = try JSONDecoder().decode(GalleryCatalogue.self, from: Data(encoded.utf8))

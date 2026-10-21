@@ -86,6 +86,10 @@ with sync_playwright() as p:
   assert page.request.get(BASE+'/'+path).status==404,path
  response=page.request.get(BASE+'/')
  assert 'frame-ancestors' in response.headers.get('content-security-policy','')
+ assert page.locator('link[rel=icon]').get_attribute('href')=='/favicon.svg'
+ icon=page.request.get(BASE+'/favicon.svg')
+ assert icon.status==200 and 'image/svg+xml' in icon.headers.get('content-type','')
+ assert '<svg' in icon.text()
  assert not errors,errors
  print(json.dumps({'browser':'Chromium','desktop':True,'mobile':True,'search':True,'tags':True,'favorites_persist':True,'keyboard':True,'desktop_layout':True,'infinite_scroll':True,'browser_back':True,'delayed_image_race':True,'private_paths_404':True,'page_errors':errors}))
  browser.close()

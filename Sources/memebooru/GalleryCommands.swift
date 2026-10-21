@@ -100,7 +100,7 @@ struct Gallery: ParsableCommand {
             let dest = URL(fileURLWithPath: output).standardizedFileURL
             guard !fm.fileExists(atPath: dest.path) else { throw ValidationError("output already exists; publish into a new directory") }
             let webRoot = URL(fileURLWithPath: web)
-            let files = ["index.html", "app.js", "style.css"]
+            let files = ["index.html", "app.js", "style.css", "favicon.svg"]
             for file in files {
                 guard fm.fileExists(atPath: webRoot.appendingPathComponent(file).path) else { throw ValidationError("missing web UI: \(file)") }
             }
