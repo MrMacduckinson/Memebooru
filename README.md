@@ -89,9 +89,10 @@ node --test Tests/Web/gallery.test.mjs
 python3 -m unittest discover -s Tests/Web -p 'test_*.py' # requires Pillow
 # Optional browser checks: pip install playwright && playwright install chromium
 python3 Tests/Web/browser.py http://127.0.0.1:8080
+python3 Tests/Web/spacing.py http://127.0.0.1:8080
 ```
 
-Gallery tests cover staging, idempotent imports, hashes, path traversal, partial-publication refusal and private-data exclusion. Browser checks cover navigation, progressive loading, delayed-image replacement, mobile layout and public-path boundaries.
+Gallery tests cover staging, idempotent imports, hashes, path traversal, partial-publication refusal and private-data exclusion. Browser checks cover navigation, progressive loading, delayed-image replacement, mobile layout and public-path boundaries. Spacing checks measure text insets, header gaps, content padding and overflow in gallery/detail views at 11 viewport widths from 320 to 1920 px.
 
 ## Layout
 
