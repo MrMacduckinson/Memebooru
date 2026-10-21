@@ -155,7 +155,7 @@ struct Header: View {
         #endif
     }
 
-    /// "memeBOORU" — the site's own wordmark rhythm (light word + bold caps), with the framed logo tile.
+    /// Memebooru wordmark with the framed logo tile.
     private var brand: some View {
         Button { library.go(.gallery) } label: {
             HStack(spacing: Space.s) {
@@ -164,8 +164,8 @@ struct Header: View {
                     .overlay(RoundedRectangle(cornerRadius: 3).stroke(Theme.headerAccent, lineWidth: 2))
                     .overlay(Image(systemName: "face.smiling").font(.system(size: 13, weight: .bold)).foregroundStyle(Theme.headerAccent))
                 HStack(spacing: 0) {
-                    Text("meme").font(.custom(Theme.displayFamily, fixedSize: 20))
-                    Text("BOORU").font(.custom(Theme.displayFamily, fixedSize: 17).weight(.bold))
+                    Text("Meme").font(.custom(Theme.displayFamily, fixedSize: 20))
+                    Text("booru").font(.custom(Theme.displayFamily, fixedSize: 17).weight(.bold))
                 }
                 .foregroundStyle(Theme.headerText)
                 .fixedSize()
