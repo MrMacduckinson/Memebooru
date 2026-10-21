@@ -25,14 +25,14 @@ struct ExportSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Space.l) {
-            Text("Экспорт").dfont(22).foregroundStyle(Theme.text)
+            Text("Export").dfont(22).foregroundStyle(Theme.text)
             if uncommonOnly, let p = primary {
                 VStack(alignment: .leading, spacing: Space.xs) {
                     HStack(spacing: Space.iconLabel) {
                         Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 11)).foregroundStyle(Theme.warnInk)
-                        Text("Этот мем сохранён только в необычном формате (\(p.formatLabel)).").zfont(12, .bold).foregroundStyle(Theme.warnInk)
+                        Text("This meme is stored only in an uncommon format (\(p.formatLabel)).").zfont(12, .bold).foregroundStyle(Theme.warnInk)
                     }
-                    Text(popularTarget.map { "Конвертировать в \($0.label) перед экспортом? Этот формат выбран ниже." } ?? "Некоторые приложения не поддерживают этот формат.")
+                    Text(popularTarget.map { "Convert it to \($0.label) before exporting? It's selected below." } ?? "Most apps may not open it.")
                         .zfont(12).foregroundStyle(Theme.text)
                 }
                 .padding(Space.m)
@@ -43,26 +43,26 @@ struct ExportSheet: View {
 
             VStack(alignment: .leading, spacing: Space.xs) {
                 if let p = primary {
-                    radio(.stored, "Как хранится — \(p.formatLabel)", p.compatibility(kind: meme.kind) == .popular ? "popular" : "uncommon")
+                    radio(.stored, "As stored — \(p.formatLabel)", p.compatibility(kind: meme.kind) == .popular ? "popular" : "uncommon")
                 }
-                if let o = original { radio(.original, "Оригинал — \(o.formatLabel)", "uncommon") }
+                if let o = original { radio(.original, "Original — \(o.formatLabel)", "uncommon") }
             }
 
             if !formats.isEmpty {
-                SectionBlock("Конвертировать в") {
+                SectionBlock("Convert to") {
                     LazyVGrid(columns: [GridItem(.flexible(), alignment: .leading), GridItem(.flexible(), alignment: .leading)],
                               alignment: .leading, spacing: Space.xs) {
                         ForEach(formats, id: \.self) { f in radio(.format(f), f.label, f.isPopular ? "popular" : nil) }
                     }
                 }
-                Text("Конвертированная копия сохраняется только в выбранную папку. Файлы коллекции остаются в исходном виде.")
+                Text("A converted copy is only written where you save it — the collection keeps its files as they are.")
                     .zfont(11).foregroundStyle(Theme.muted)
             }
 
             HStack(spacing: Space.s) {
                 Spacer()
-                GlassButton(title: "Отмена") { dismiss() }.keyboardShortcut(.cancelAction)
-                GlassButton(title: "Экспорт…", symbol: "square.and.arrow.down", prominent: true) { save() }.keyboardShortcut(.defaultAction)
+                GlassButton(title: "Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
+                GlassButton(title: "Export…", symbol: "square.and.arrow.down", prominent: true) { save() }.keyboardShortcut(.defaultAction)
             }
         }
         .padding(Space.xl)

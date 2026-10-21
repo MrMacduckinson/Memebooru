@@ -24,7 +24,7 @@ struct TweetCardView: View {
     let model: TweetCardModel
     var compact = false
     var maxMediaHeight: CGFloat = 460
-    /// Shown instead of a missing quote ("Загрузить цитируемый твит"); nil hides the button.
+    /// Shown instead of a missing quote ("Load quoted tweet"); nil hides the button.
     var onLoadQuote: (() -> Void)? = nil
 
     var body: some View {
@@ -52,7 +52,7 @@ struct TweetCardView: View {
         VStack(alignment: .leading, spacing: 6 * zoom) {
             TweetHeader(model: model, size: .tile)
             if let r = model.replyTo, !r.isEmpty {
-                Text("В ответ @\(r)").zfont(10).foregroundStyle(Theme.link).lineLimit(1)
+                Text("Replying to @\(r)").zfont(10).foregroundStyle(Theme.link).lineLimit(1)
             }
             if !model.text.isEmpty {
                 Text(model.text).zfont(12).foregroundStyle(Theme.text).lineSpacing(1)
@@ -79,7 +79,7 @@ struct TweetCardView: View {
         VStack(alignment: .leading, spacing: Space.m) {
             TweetHeader(model: model, size: .full)
             if let r = model.replyTo, !r.isEmpty {
-                Text("В ответ @\(r)").zfont(13).foregroundStyle(Theme.link)
+                Text("Replying to @\(r)").zfont(13).foregroundStyle(Theme.link)
             }
             if !model.text.isEmpty {
                 Text(model.text).zfont(17).foregroundStyle(Theme.text).lineSpacing(2)
@@ -91,7 +91,7 @@ struct TweetCardView: View {
             if let q = model.quoted.first {
                 QuoteBox(model: q, style: .full)
             } else if model.quoteMissing, let onLoadQuote {
-                GlassButton(title: "Загрузить цитируемый твит", symbol: "quote.bubble", action: onLoadQuote)
+                GlassButton(title: "Load quoted tweet", symbol: "quote.bubble", action: onLoadQuote)
             }
             if let d = model.postedAt {
                 Text(Date(timeIntervalSince1970: Double(d) / 1000), format: .dateTime.hour().minute().day().month().year())
@@ -138,7 +138,7 @@ struct TweetHeader: View {
                 if let s = model.url, let url = URL(string: s) {
                     Link(destination: url) {
                         Image(systemName: "arrow.up.right.square").font(.system(size: 15)).foregroundStyle(Theme.muted)
-                    }.help("Открыть в x.com").linkPointer()
+                    }.help("Open on x.com").linkPointer()
                 }
             } else {
                 // One line: the name gives way first, the handle keeps a few characters.

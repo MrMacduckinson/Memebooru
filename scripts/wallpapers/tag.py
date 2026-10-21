@@ -7,61 +7,61 @@ from pathlib import Path
 from PIL import Image, ImageOps, ImageFile
 from download import write_json
 
-# English prompts are used by CLIP; the collection's searchable tags are Russian.
+# English prompts are used by CLIP; the collection's searchable tags are English.
 SUBJECTS = {
- 'небо':'blue sky', 'облака':'clouds', 'трава':'green grass', 'деревья':'trees', 'лес':'a forest',
- 'горы':'mountains', 'холмы':'rolling hills', 'озеро':'a lake', 'океан':'the ocean', 'пляж':'a beach',
- 'река':'a river', 'водопад':'a waterfall', 'вода':'water', 'подводный_мир':'an underwater scene',
- 'рыбы':'fish', 'дельфины':'dolphins', 'пузырьки':'bubbles', 'капли':'water droplets',
- 'листья':'leaves', 'цветы':'flowers', 'бабочки':'butterflies', 'птицы':'birds', 'животные':'animals',
- 'снег':'snow', 'лёд':'ice', 'пустыня':'a desert', 'камни':'rocks', 'остров':'an island',
- 'солнце':'the sun', 'закат':'a sunset', 'луна':'the moon', 'звёзды':'stars', 'космос':'outer space',
- 'планеты':'planets', 'земной_шар':'a globe of planet Earth', 'радуга':'a rainbow', 'туман':'fog',
- 'город':'a city skyline', 'небоскрёбы':'skyscrapers', 'архитектура':'buildings', 'мост':'a bridge',
- 'дорога':'a road', 'транспорт':'vehicles', 'самолёт':'an airplane', 'автомобиль':'a car',
- 'круги':'circles', 'сферы':'glossy spheres', 'кубы':'cubes', 'волны':'abstract waves',
- 'линии':'flowing lines', 'спирали':'spirals', 'фрактал':'a fractal', 'свечение':'glowing light',
- 'градиент':'a smooth color gradient', 'стекло':'transparent glass', 'металл':'shiny metal',
- 'текстура':'a textured surface', 'узор':'a repeating pattern', 'геометрия':'geometric shapes',
- 'ленты':'flowing ribbons', 'блики':'light reflections', 'технологии':'futuristic technology',
- 'компьютер':'a computer', 'логотип':'a logo', 'windows':'the Windows logo', 'apple':'the Apple logo',
- 'надписи':'typography and text', 'сердца':'hearts', 'музыка':'musical notes', 'ноты':'sheet music',
- 'аниме':'anime characters', 'девушка':'an illustrated girl', 'персонажи':'cartoon characters',
- 'лиса':'a cartoon fox', 'вокалоид':'Hatsune Miku', 'меха':'anime robots', 'фэнтези':'a fantasy world',
- 'сакура':'cherry blossoms', 'бамбук':'bamboo', 'пальмы':'palm trees', 'подсолнухи':'sunflowers',
- 'розы':'roses', 'ромашки':'daisies', 'лотос':'lotus flowers', 'фрукты':'fruit',
- 'мох':'moss', 'поле':'a field', 'сад':'a garden', 'ветки':'tree branches',
- 'огонь':'fire', 'молния':'lightning', 'дождь':'rain', 'ночь':'a night scene',
- 'воздушные_шары':'balloons', 'объёмные_формы':'abstract three dimensional objects',
+ 'sky':'blue sky', 'clouds':'clouds', 'grass':'green grass', 'trees':'trees', 'forest':'a forest',
+ 'mountains':'mountains', 'hills':'rolling hills', 'lake':'a lake', 'ocean':'the ocean', 'beach':'a beach',
+ 'river':'a river', 'waterfall':'a waterfall', 'water':'water', 'underwater':'an underwater scene',
+ 'fish':'fish', 'dolphins':'dolphins', 'bubbles':'bubbles', 'droplets':'water droplets',
+ 'leaves':'leaves', 'flowers':'flowers', 'butterflies':'butterflies', 'birds':'birds', 'animals':'animals',
+ 'snow':'snow', 'ice':'ice', 'desert':'a desert', 'rocks':'rocks', 'island':'an island',
+ 'sun':'the sun', 'sunset':'a sunset', 'moon':'the moon', 'stars':'stars', 'space':'outer space',
+ 'planets':'planets', 'globe':'a globe of planet Earth', 'rainbow':'a rainbow', 'fog':'fog',
+ 'city':'a city skyline', 'skyscrapers':'skyscrapers', 'architecture':'buildings', 'bridge':'a bridge',
+ 'road':'a road', 'transport':'vehicles', 'airplane':'an airplane', 'car':'a car',
+ 'circles':'circles', 'spheres':'glossy spheres', 'cubes':'cubes', 'waves':'abstract waves',
+ 'lines':'flowing lines', 'spirals':'spirals', 'fractal':'a fractal', 'glow':'glowing light',
+ 'gradient':'a smooth color gradient', 'glass':'transparent glass', 'metal':'shiny metal',
+ 'texture':'a textured surface', 'pattern':'a repeating pattern', 'geometry':'geometric shapes',
+ 'ribbons':'flowing ribbons', 'light_reflections':'light reflections', 'technology':'futuristic technology',
+ 'computer':'a computer', 'logo':'a logo', 'windows':'the Windows logo', 'apple':'the Apple logo',
+ 'typography':'typography and text', 'hearts':'hearts', 'music':'musical notes', 'musical_notes':'sheet music',
+ 'anime':'anime characters', 'girl':'an illustrated girl', 'characters':'cartoon characters',
+ 'fox':'a cartoon fox', 'vocaloid':'Hatsune Miku', 'mecha':'anime robots', 'fantasy':'a fantasy world',
+ 'cherry_blossoms':'cherry blossoms', 'bamboo':'bamboo', 'palm_trees':'palm trees', 'sunflowers':'sunflowers',
+ 'roses':'roses', 'daisies':'daisies', 'lotus':'lotus flowers', 'fruit':'fruit',
+ 'moss':'moss', 'field':'a field', 'garden':'a garden', 'branches':'tree branches',
+ 'fire':'fire', 'lightning':'lightning', 'rain':'rain', 'night':'a night scene',
+ 'balloons':'balloons', '3d_shapes':'abstract three dimensional objects',
 }
-STYLES = {'фотография':'a photograph', '3d_графика':'a 3D rendered illustration',
-          'векторная_графика':'a vector illustration', 'рисунок':'a hand drawn illustration', 'фотоколлаж':'a collage of photographs',
-          'абстракция':'abstract digital art', 'пиксельная_графика':'pixel art'}
+STYLES = {'photography':'a photograph', '3d_graphics':'a 3D rendered illustration',
+          'vector_art':'a vector illustration', 'illustration':'a hand drawn illustration', 'photo_collage':'a collage of photographs',
+          'abstract':'abstract digital art', 'pixel_art':'pixel art'}
 
 def measured_tags(image, width, height):
-    tags = ['обои', 'горизонтальный' if width>height else 'вертикальный' if height>width else 'квадратный']
+    tags = ['wallpaper', 'landscape' if width>height else 'portrait' if height>width else 'square']
     ratio=width/height
     for name,value in [('16:9',16/9),('16:10',1.6),('4:3',4/3),('3:2',1.5),('9:16',9/16),('1:1',1)]:
-        if abs(ratio-value)<.025: tags.append('формат_'+name.replace(':','_'));break
-    if width>=3840 and height>=2160: tags.append('4k_и_выше')
+        if abs(ratio-value)<.025: tags.append('aspect_'+name.replace(':','_'));break
+    if width>=3840 and height>=2160: tags.append('4k_and_above')
     elif width>=2560 and height>=1440: tags.append('qhd')
     elif width>=1920 and height>=1080: tags.append('full_hd')
-    else: tags.append('компактное_разрешение')
+    else: tags.append('low_resolution')
     counts={}
     small=image.resize((48,48))
     pixels=small.get_flattened_data() if hasattr(small,'get_flattened_data') else small.getdata()
     for r,g,b in pixels:
         h,s,v=colorsys.rgb_to_hsv(r/255,g/255,b/255)
-        if v<.14: key='чёрный'
-        elif s<.12: key='белый' if v>.85 else 'серый'
-        elif h<.035 or h>=.96:key='красный'
-        elif h<.12:key='оранжевый' if v>.55 else 'коричневый'
-        elif h<.19:key='жёлтый'
-        elif h<.45:key='зелёный'
-        elif h<.55:key='бирюзовый'
-        elif h<.72:key='синий'
-        elif h<.84:key='фиолетовый'
-        else:key='розовый'
+        if v<.14: key='black'
+        elif s<.12: key='white' if v>.85 else 'gray'
+        elif h<.035 or h>=.96:key='red'
+        elif h<.12:key='orange' if v>.55 else 'brown'
+        elif h<.19:key='yellow'
+        elif h<.45:key='green'
+        elif h<.55:key='cyan'
+        elif h<.72:key='blue'
+        elif h<.84:key='purple'
+        else:key='pink'
         counts[key]=counts.get(key,0)+1
     tags += [k for k,v in sorted(counts.items(),key=lambda x:-x[1])[:3] if v/2304>.09]
     return tags

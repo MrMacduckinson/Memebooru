@@ -28,8 +28,21 @@ class TaggingTests(unittest.TestCase):
             self.assertIsNotNone(warning)
             self.assertEqual(path.read_bytes(), original)
             self.assertEqual(ImageFile.LOAD_TRUNCATED_IMAGES, previous)
+    def test_published_tags_and_tagger_vocabulary_are_english(self):
+        import json
+        from tag import SUBJECTS, STYLES
+        root = Path(__file__).resolve().parents[2]
+        manifest = json.loads((root / 'Collections/frutiger-aero.json').read_text())
+        tags = set(SUBJECTS) | set(STYLES)
+        for item in manifest['items']:
+            tags.update(item['tags'])
+            tags.update(item['tagging']['suggested'])
+        self.assertTrue(all(tag.isascii() for tag in tags))
+        self.assertEqual(len(manifest['items']), 6069)
+        self.assertEqual(len({item['sha256'] for item in manifest['items']}), 6002)
+
     def test_measured_tags_describe_pixels_and_dimensions(self):
         tags = measured_tags(Image.new('RGB', (16, 9), 'blue'), 1920, 1080)
-        self.assertTrue({'синий', 'full_hd', 'горизонтальный', 'формат_16_9'} <= set(tags))
+        self.assertTrue({'blue', 'full_hd', 'landscape', 'aspect_16_9'} <= set(tags))
 
 if __name__ == '__main__': unittest.main()

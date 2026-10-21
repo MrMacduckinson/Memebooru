@@ -1,7 +1,7 @@
 import SwiftUI
 import MemebooruCore
 
-/// "Недавно удалённые" — the full undo history. Every delete/discard is a batch; expand one to see each
+/// "Recently deleted" — the full undo history. Every delete/discard is a batch; expand one to see each
 /// removed item with a preview, and restore items one by one or the whole batch. Spans all past actions,
 /// not just the last.
 struct UndoHistoryView: View {
@@ -9,10 +9,10 @@ struct UndoHistoryView: View {
 
     var body: some View {
         PageColumn {
-            PageHeader(title: "История", subtitle: plural(library.undoBatches.count, "action")) { EmptyView() }
+            PageHeader(title: "History", subtitle: plural(library.undoBatches.count, "action")) { EmptyView() }
             if library.undoBatches.isEmpty {
-                EmptyState(icon: "clock.arrow.circlepath", title: "История пока пуста",
-                           subtitle: "Удалённые элементы можно восстановить здесь, в том числе после перезапуска.")
+                EmptyState(icon: "clock.arrow.circlepath", title: "No history yet",
+                           subtitle: "Deletes and discards are recorded here item by item, and can be restored — even after a restart.")
             }
             ForEach(library.undoBatches) { batch in
                 UndoBatchRow(batch: batch)
@@ -38,7 +38,7 @@ private struct UndoBatchRow: View {
             header
             if expanded {
                 if items.isEmpty {
-                    Text("В этом действии нет элементов для предпросмотра.").zfont(12).foregroundStyle(Theme.muted)
+                    Text("No previewable items in this action.").zfont(12).foregroundStyle(Theme.muted)
                 } else {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 104 * zoom, maximum: 104 * zoom), spacing: Space.l, alignment: .top)],
                               alignment: .leading, spacing: Space.l) {
@@ -55,14 +55,14 @@ private struct UndoBatchRow: View {
             Image(systemName: expanded ? "chevron.down" : "chevron.right").font(.system(size: 11, weight: .bold)).foregroundStyle(Theme.muted)
                 .frame(width: 14)
             VStack(alignment: .leading, spacing: Space.xs / 2) {
-                Text(localizedHistoryLabel(batch.summary)).zfont(13, .bold).foregroundStyle(Theme.link).lineLimit(1)
+                Text(batch.summary).zfont(13, .bold).foregroundStyle(Theme.link).lineLimit(1)
                 Text("\(batch.count) item\(batch.count == 1 ? "" : "s") · \(date)").zfont(11).foregroundStyle(Theme.muted)
             }
             Spacer()
             if batch.undone {
-                Text("восстановлено").zfont(12).foregroundStyle(Theme.meta)
+                Text("restored").zfont(12).foregroundStyle(Theme.meta)
             } else {
-                GlassButton(title: "Восстановить всё", symbol: "arrow.uturn.backward") {
+                GlassButton(title: "Restore all", symbol: "arrow.uturn.backward") {
                     library.restoreUndoBatch(batch.id); reload()
                 }
             }
@@ -80,7 +80,7 @@ private struct UndoBatchRow: View {
                         ThumbCell(meme: m, size: CGSize(width: side, height: side)).contentShape(Rectangle())
                     }.buttonStyle(.plain).linkPointer()
                 } else {
-                    LitCard(label: "ЭЛЕМЕНТ") {
+                    LitCard(label: "ITEM") {
                         Image(systemName: "doc").font(.system(size: 20)).foregroundStyle(Theme.faint).frame(maxWidth: .infinity, maxHeight: .infinity)
                     }.thumbShadow()
                 }
@@ -92,9 +92,9 @@ private struct UndoBatchRow: View {
             Text(name(item)).zfont(11).foregroundStyle(Theme.text).lineLimit(1).frame(width: side, alignment: .leading)
 
             if item.entry.undone {
-                Text("восстановлено").zfont(11).foregroundStyle(Theme.meta)
+                Text("restored").zfont(11).foregroundStyle(Theme.meta)
             } else {
-                LinkText(text: "Восстановить", size: 11, weight: .bold) { library.restoreUndoEntry(item.entry.id); reload() }
+                LinkText(text: "Restore", size: 11, weight: .bold) { library.restoreUndoEntry(item.entry.id); reload() }
             }
         }
     }
@@ -103,9 +103,9 @@ private struct UndoBatchRow: View {
         if let m = item.meme {
             if let a = library.primaryAsset(of: m.id), let n = a.originalName { return n }
             if let t = m.textExact ?? m.textVerbatim, !t.isEmpty { return String(t.prefix(24)) }
-            return m.kind.categoryName
+            return m.kind.rawValue
         }
-        return item.entry.op == "stage_removed" ? "входящий элемент" : "элемент"
+        return item.entry.op == "stage_removed" ? "staged item" : "item"
     }
 
     private func toggle() {

@@ -75,7 +75,7 @@ extension Library {
     func applyComposite(_ target: CompositeTarget, layout: CompositeLayout, order: [Int]) {
         guard let staging, let c = collection else { return }
         compositeEditor = nil
-        busy = "Собираем коллаж…"
+        busy = "Combining pictures…"
         let analyzer = analyzer
         let reordered = order == Array(order.indices) ? nil : order
         Task {
@@ -87,7 +87,7 @@ extension Library {
                 switch result {
                 case .success(let item):
                     stagingSelecting = false
-                    lastUndoLabel = "Объединено изображений: \(ids.count)"
+                    lastUndoLabel = "Combined \(ids.count) pictures"
                     reloadStaging(); refreshUndo()
                     section = .staging
                     openStaged = item.id
@@ -114,18 +114,18 @@ extension Library {
         guard let staging else { return }
         do {
             let parts = try staging.split(item.id)
-            lastUndoLabel = "Разделить на изображения: \(parts.count)"
+            lastUndoLabel = "Split into \(parts.count) pictures"
             reloadStaging(); refreshUndo()
             openStaged = parts.first?.id
         } catch { errorMessage = "\(error)" }
     }
 
-    /// "Добавить › Коллаж…": stage the chosen files, then lay them out.
+    /// "Add › Combined picture…": stage the chosen files, then lay them out.
     func combineFiles(_ urls: [URL]) {
         stage(urls: urls) { [weak self] staged in
             let pictures = staged.filter(Library.combinable)
             guard pictures.count >= 2 else {
-                if !staged.isEmpty { self?.errorMessage = "Выберите хотя бы два изображения для коллажа." }
+                if !staged.isEmpty { self?.errorMessage = "Choose at least two pictures to combine." }
                 return
             }
             self?.compositeEditor = .new(pictures.map(\.id))
@@ -135,6 +135,6 @@ extension Library {
 
 extension CompositeLayout.Arrangement {
     var label: String {
-        switch self { case .row: "В ряд"; case .column: "В колонку"; case .grid: "Сетка"; case .feature: "Главное и колонка" }
+        switch self { case .row: "Side by side"; case .column: "Stacked"; case .grid: "Grid"; case .feature: "One + stack" }
     }
 }

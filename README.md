@@ -1,31 +1,31 @@
 # Memebooru
 
-Локальная коллекция изображений, GIF, видео, аудио, текстов и твитов — с тегами, поиском, входящими, дедупликацией и синхронизацией. Нативное приложение для macOS/iOS имеет русский интерфейс. CLI и серверные диагностические сообщения используют английский язык.
+A local collection of pictures, GIFs, videos, audio, text and tweets with tags, search, staging, deduplication and sync. The native macOS/iOS application and web gallery use English.
 
-Веб-версия — публичная галерея **одной явно опубликованной коллекции**. Она поддерживает поиск по названиям и тегам, исключения (`-аниме`), несколько тегов одновременно, фильтры по разделу, ориентации и разрешению, сортировку, избранное в браузере, просмотр и скачивание оригиналов. Компоновка повторяет нативное приложение: поиск в шапке, боковая колонка 208 px, превью без обрезки в области высотой 150 px и просмотр изображения внутри рабочей области. Следующие изображения подгружаются при прокрутке. На телефоне боковая колонка открывается кнопкой меню. В просмотре работают стрелки, Escape и возврат браузера.
+The web gallery exposes **one explicitly published collection**. Search titles and tags, combine tags, exclude words (`-anime`), filter by category/orientation/resolution, sort, save browser-local favorites and download originals. The layout follows the native application: header search, a 208 px sidebar, uncropped thumbnails in 150 px areas, and an inline detail page. Images load progressively as you scroll. On phones, the sidebar becomes a drawer. Arrow keys navigate images; Escape and browser Back return to the gallery. Changing images clears the previous image immediately while the next loads.
 
-Веб-галерея предназначена для просмотра. Импорт, редактирование, синхронизация и управление коллекцией остаются в нативном приложении/CLI. Это позволяет отдавать сайт обычным HTTP-сервером и кэшировать изображения в CDN без публичного доступа к базе данных.
+The gallery is read-only. Importing, editing and syncing remain in the native app/CLI. A static server and CDN can serve the public export without exposing the database.
 
-## Быстрый запуск веб-галереи
+## Run the web gallery
 
-Требуются Docker с Compose и подготовленная папка публичного экспорта. В ней должны быть `index.html`, `app.js`, `style.css`, `catalogue.json`, `media/` и `thumbs/`.
+Requires Docker Compose and a prepared public export containing `index.html`, `app.js`, `style.css`, `catalogue.json`, `media/` and `thumbs/`.
 
 ```sh
 PUBLIC_GALLERY=/absolute/path/to/public-gallery \
   docker compose -f docker-compose.web.yml up -d --build
 ```
 
-По умолчанию сайт доступен только на `127.0.0.1:8080`. Перед ним ставится HTTPS reverse proxy. Чтобы открыть origin на другом интерфейсе, задайте `WEB_BIND` и ограничьте доступ firewall. Подробности: [развёртывание](deploy/README.md).
+The default bind is `127.0.0.1:8080`. Put an HTTPS reverse proxy in front. Set `WEB_BIND` and appropriate firewall rules if using another interface. See [deployment](deploy/README.md).
 
-**Никогда не монтируйте папку частной коллекции или домашнюю папку вместо public-gallery.** Используйте только результат `gallery publish`: он публикует изображения из явного списка и не копирует `collection.db`, `device.json`, входящие, историю, сеансы или параметры синхронизации. Приватные теги и описания из базы тоже не экспортируются: публичные метаданные берутся из манифеста.
+**Never mount a private collection or home directory as the public web root.** Only use `gallery publish` output: explicit allowlisted images and manifest metadata, without collection databases, device identity, staging, history, credentials or private database tags/descriptions.
 
-## Коллекция Frutiger Aero Archive
+## Frutiger Aero Archive collection
 
-Коллекция на 20 октября 2026 года: **38 выбранных разделов, 6 069 исходных файлов и 6 002 уникальных изображения**. На файл приходится 6–16 тегов (медиана — 10). [Состав и происхождение разметки](Collections/README.md).
+Snapshot from October 20, 2026: **38 selected sections, 6,069 source URLs, 6,002 unique images**, with 6–16 English tags per file (median 10). See [collection provenance](Collections/README.md).
 
-Источник: <https://frutigeraeroarchive.org/wallpapers>. Загрузчик обходит связанные страницы раздела, сохраняет оригиналы, URL происхождения, размеры и SHA-256. При повторном запуске скачивает только отсутствующие файлы. Полнота относится к обнаруженным изображениям этого раздела на дату обхода, а не ко всем материалам сайта.
+Source: <https://frutigeraeroarchive.org/wallpapers>. The downloader preserves source URLs, original bytes, dimensions and SHA-256; repeated runs resume missing downloads. Coverage refers to discovered images in the selected sections on that date, not the entire website.
 
-Изображения **не включены в Git и не перелицензируются под BSD**. Манифест коллекции хранит публичные метаданные; оригиналы скачиваются с указанного источника. Права на изображения остаются у соответствующих авторов. Сохраняйте атрибуцию и учитывайте условия правообладателей при дальнейшей публикации.
+**Images are not in Git and are not licensed under BSD.** Rights remain with their respective authors. Preserve attribution and respect the owners' terms when publishing.
 
 ```sh
 python3 -m venv .venv
@@ -35,31 +35,31 @@ python scripts/wallpapers/download.py /path/to/FrutigerAeroCollection \
   --manifest Collections/frutiger-aero.json
 ```
 
-Опубликованный манифест уже содержит теги; для его загрузки модель не нужна. Для нового обхода сайта запустите загрузчик без `--manifest`. Чтобы заново предложить теги, установите `scripts/wallpapers/requirements.txt` и выполните `python scripts/wallpapers/tag.py /path/to/FrutigerAeroCollection`.
+The published manifest already includes English tags; downloading it needs no model. Omit `--manifest` for a new full website crawl. To generate new tags, install `scripts/wallpapers/requirements.txt` and run `python scripts/wallpapers/tag.py /path/to/FrutigerAeroCollection`.
 
-Разметка выполняется локально: OpenCLIP предлагает сюжетные теги, а цвет, ориентация, соотношение сторон и разрешение вычисляются из изображения. Модель загружается один раз; сами изображения не отправляются в API. Автоматические сюжетные теги могут ошибаться. Поля `tagging.method`, `suggested` и `reviewed` сохраняют их происхождение. Отредактировать теги можно в `tagged.json` до импорта/публикации.
+OpenCLIP proposes semantic/style tags locally. Colors, orientation, aspect ratio and resolution are measured from pixels. Images are not sent to an API. Automatic tags can be wrong; `tagging.method`, `suggested` and `reviewed` record provenance. Edit `tagged.json` before importing/publishing to correct tags.
 
-Импорт в новую нативную коллекцию всегда проходит через **Входящие**:
+## Prepare a native collection and public export
 
-Для полного экспорта этой коллекции на Linux установите `ffmpeg` и `ffprobe` (в Debian/Ubuntu: `sudo apt-get install --no-install-recommends ffmpeg`). Три JPEG не читаются встроенным Linux-декодером; существующий резервный декодер FFmpeg создаёт для них превью, не изменяя оригиналы. Dockerfile.server уже включает FFmpeg. На сервере готового статического сайта FFmpeg не нужен.
+Imports always enter **Staging**. On Linux, install `ffmpeg` and `ffprobe` (Debian/Ubuntu: `sudo apt-get install --no-install-recommends ffmpeg`). Three archive JPEGs require the existing FFmpeg fallback for preview decoding; originals are preserved. Dockerfile.server includes FFmpeg. A server serving the finished static export does not need it.
 
 ```sh
 swift build -c release --product memebooru
-# Путь к executable: swift build -c release --show-bin-path
+# Locate executable: swift build -c release --show-bin-path
 memebooru init /path/to/Aero.memebooru
 memebooru gallery import /path/to/FrutigerAeroCollection/tagged.json -c /path/to/Aero.memebooru
 memebooru stage ls -c /path/to/Aero.memebooru
-# Явное подтверждение после проверки; --force сохраняет и визуально похожие варианты.
+# Explicitly commit after reviewing; --force preserves visually similar variants.
 memebooru stage commit all --force --no-convert -c /path/to/Aero.memebooru
 memebooru gallery publish /path/to/FrutigerAeroCollection/tagged.json \
   -c /path/to/Aero.memebooru --output /path/to/public-gallery --web Web
 ```
 
-Команда `memebooru` должна быть в `PATH`; можно использовать абсолютный путь из `--show-bin-path`. `gallery import` проверяет контрольные суммы всех файлов перед первым изменением, пропускает уже импортированные точные дубликаты и сохраняет оригинальные форматы. `gallery publish` требует новую выходную папку, работает через временную папку и прекращает публикацию, если изображение не сохранено в коллекции или повреждено.
+Put `memebooru` on PATH or use its absolute executable path. Import verifies every file hash before making changes, skips known exact duplicates and preserves original formats. Publication requires a new output directory, uses temporary output and aborts if an allowlisted image is absent or corrupt.
 
-## Нативное приложение
+## Native application
 
-Swift 6.0+, Xcode с SDK macOS/iOS 26+, XcodeGen. Ядро пакета поддерживает macOS 15+; текущее приложение настроено на macOS/iOS 26+.
+Swift 6.0+, Xcode with macOS/iOS 26+ SDKs, and XcodeGen. The core package supports macOS 15+; the app currently targets macOS/iOS 26+.
 
 ```sh
 cd Apps/Memebooru
@@ -67,11 +67,11 @@ xcodegen generate
 open Memebooru.xcodeproj
 ```
 
-Для iOS задайте собственную команду подписи и App Group в entitlements. Опциональные мультимедийные инструменты собираются скриптами `scripts/build-ffmpeg-macos.sh` и `scripts/build-ffmpeg-ios.sh`. Без них основные функции просмотра изображений работают; конвертация и часть видеофункций требуют ffmpeg. iOS-сборка с FFmpeg требует заранее созданного `Vendor/ffmpeg-ios/MBFFmpeg.xcframework`.
+For iOS, supply your signing team and App Group entitlements. Optional multimedia tools are built with `scripts/build-ffmpeg-macos.sh` and `scripts/build-ffmpeg-ios.sh`. Image browsing works without FFmpeg; conversion and some video operations require it. iOS builds with FFmpeg require `Vendor/ffmpeg-ios/MBFFmpeg.xcframework` beforehand.
 
-Коллекции имеют расширение `.memebooru` и содержат SQLite, медиа и миниатюры. Храните резервные копии. Импорты файлов, архивов Telegram и твитов сначала поступают во входящие; контекст ответов и цитат твитов сохраняется. Изменение языка интерфейса не переименовывает пользовательские теги и не меняет хранимые данные.
+Collections are `.memebooru` directories containing SQLite, media and previews. Keep backups. File, Telegram and tweet imports enter staging; tweet replies and quotes preserve their context. UI language does not rewrite private user content.
 
-## CLI и сервер синхронизации
+## CLI and sync server
 
 ```sh
 swift run memebooru --help
@@ -79,30 +79,30 @@ swift run memebooru gallery --help
 swift test
 ```
 
-Linux-сервер синхронизации и Telegram-бот — отдельный компонент: `Dockerfile.server`, `docker-compose.server.yml`, `.env.example`. Он не нужен для публичной веб-галереи. Доступы задаются окружением и остаются вне Git. Не открывайте порты синхронизации только ради публикации сайта.
+The Linux sync server and Telegram bot are separate: `Dockerfile.server`, `docker-compose.server.yml`, `.env.example`. They are not needed for the public gallery. Keep credentials in environment variables outside Git; do not expose sync ports just to publish a website.
 
-## Проверки
+## Checks
 
 ```sh
 swift test --filter GalleryTests
 node --test Tests/Web/gallery.test.mjs
-python3 -m unittest discover -s Tests/Web -p 'test_*.py' # требуется Pillow
-# Дополнительно: pip install playwright && playwright install chromium
+python3 -m unittest discover -s Tests/Web -p 'test_*.py' # requires Pillow
+# Optional browser checks: pip install playwright && playwright install chromium
 python3 Tests/Web/browser.py http://127.0.0.1:8080
 ```
 
-Тесты публикации проверяют прохождение через входящие, идемпотентный импорт, контрольные суммы, запрет выхода за пределы папки, отказ от частичного экспорта и отсутствие посторонних записей/приватных тегов в сайте. Веб-тесты проверяют поиск, фильтры и допустимые пути медиа.
+Gallery tests cover staging, idempotent imports, hashes, path traversal, partial-publication refusal and private-data exclusion. Browser checks cover navigation, progressive loading, delayed-image replacement, mobile layout and public-path boundaries.
 
-## Структура
+## Layout
 
-- `Sources/MemebooruCore` — SQLite, модель, теги, поиск, входящие, дедупликация и синхронизация.
-- `Sources/MemebooruPlatformApple`, `Sources/MemebooruPlatformLinux` — платформенные сервисы.
-- `Sources/memebooru` — CLI, импорт каталога и безопасная публикация.
-- `Apps/Memebooru` — нативный интерфейс macOS/iOS.
-- `Web` — адаптивная веб-галерея без сборщика и внешних скриптов.
-- `deploy` — настройки публичного HTTP-сервера и инструкции.
-- `scripts/wallpapers` — воспроизводимые загрузка и разметка архива.
+- `Sources/MemebooruCore`: database, models, tags, search, staging, deduplication and sync.
+- `Sources/MemebooruPlatformApple`, `Sources/MemebooruPlatformLinux`: platform services.
+- `Sources/memebooru`: CLI, catalogue import and publication.
+- `Apps/Memebooru`: native macOS/iOS UI.
+- `Web`: responsive gallery without a bundler or external scripts.
+- `deploy`: HTTP server configuration and documentation.
+- `scripts/wallpapers`: reproducible downloading and local tagging.
 
-## Лицензия
+## License
 
-Собственный код Memebooru — [BSD-2-Clause](LICENSE). У сторонних компонентов свои лицензии: [THIRD_PARTY.md](THIRD_PARTY.md). Коллекции, изображения и пользовательские данные не покрываются лицензией исходного кода.
+Original Memebooru code: [BSD-2-Clause](LICENSE). Third-party components retain their own licenses: [THIRD_PARTY.md](THIRD_PARTY.md). Collections, images and user content are not covered by the code license.

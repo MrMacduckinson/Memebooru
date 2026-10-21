@@ -29,7 +29,7 @@ struct MemeDetailView: View {
               ScrollViewReader { proxy in
                 ScrollView {
                     // deviantART's deviation page: artwork + title + description on the left,
-                    // actions / "Ещё из" / Details in a 300pt column on the right.
+                    // actions / "More from" / Details in a 300pt column on the right.
                     // Narrow windows stack the column under the main one.
                     let wide = geo.size.width >= 900
                     let side = sideWidth
@@ -93,7 +93,7 @@ struct MemeDetailView: View {
 
     private func breadcrumb(_ meme: Meme) -> some View {
         HStack(spacing: Space.xs) {
-            LinkText(text: "‹ Коллекция", size: 12) { library.popDetail() }.accessibilityIdentifier("postBack")
+            LinkText(text: "‹ Posts", size: 12) { library.popDetail() }.accessibilityIdentifier("postBack")
             Text("/").zfont(12).foregroundStyle(Theme.faint)
             LinkText(text: meme.kind.categoryName, size: 12) { library.search(tag: meme.kind.kindTag) }
         }
@@ -155,14 +155,14 @@ struct MemeDetailView: View {
             HStack(alignment: .firstTextBaseline, spacing: Space.s) {
                 Image(systemName: "arrow.triangle.2.circlepath").font(.system(size: 11)).foregroundStyle(Theme.link)
                 if showOriginal, let o = original {
-                    Text("Показан оригинал \(o.formatLabel) в необычном формате.").zfont(12).foregroundStyle(Theme.text)
+                    Text("Showing the original \(o.formatLabel), an uncommon format.").zfont(12).foregroundStyle(Theme.text)
                     Spacer(minLength: Space.s)
-                    LinkText(text: "Вернуться к \(p.formatLabel)", size: 12, weight: .bold) { showOriginal = false }
+                    LinkText(text: "Back to \(p.formatLabel)", size: 12, weight: .bold) { showOriginal = false }
                 } else {
-                    Text(original != nil ? "Конвертировано из \(source). Оригинал сохранён."
-                                         : "Конвертировано из \(source); оригинал не сохранён.").zfont(12).foregroundStyle(Theme.text)
+                    Text(original != nil ? "Converted from \(source). The original is kept too."
+                                         : "Converted from \(source) (the original wasn't kept).").zfont(12).foregroundStyle(Theme.text)
                     Spacer(minLength: Space.s)
-                    if original != nil { LinkText(text: "Показать оригинал", size: 12, weight: .bold) { showOriginal = true } }
+                    if original != nil { LinkText(text: "View original", size: 12, weight: .bold) { showOriginal = true } }
                 }
             }
             .padding(Space.m)
@@ -174,15 +174,15 @@ struct MemeDetailView: View {
             VStack(alignment: .leading, spacing: Space.s) {
                 HStack(alignment: .firstTextBaseline, spacing: Space.iconLabel) {
                     Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 11)).foregroundStyle(Theme.warnInk)
-                    Text("Сохранено только в необычном формате: \(p.formatLabel)").zfont(12, .bold).foregroundStyle(Theme.warnInk)
+                    Text("Stored only in an uncommon format: \(p.formatLabel)").zfont(12, .bold).foregroundStyle(Theme.warnInk)
                 }
-                Text("Telegram, телефоны и браузеры могут не открыть файл. Можно конвертировать в \(target.label).").zfont(12).foregroundStyle(Theme.text)
+                Text("Telegram, phones and browsers may not open it. Convert it to \(target.label) to be safe.").zfont(12).foregroundStyle(Theme.text)
                 if library.canConvert {
                     HStack(spacing: Space.l) {
-                        GlassButton(title: "Конвертировать в \(target.label)", symbol: "arrow.triangle.2.circlepath", prominent: true) {
+                        GlassButton(title: "Convert to \(target.label)", symbol: "arrow.triangle.2.circlepath", prominent: true) {
                             library.convertMeme(meme.id, keepOriginal: keepOriginalOnConvert) { load() }
                         }
-                        MBToggle(isOn: $keepOriginalOnConvert, label: "Сохранить оригинал \(p.formatLabel)")
+                        MBToggle(isOn: $keepOriginalOnConvert, label: "Keep the original \(p.formatLabel)")
                     }
                     .padding(.top, Space.xs)
                 }
@@ -209,7 +209,7 @@ struct MemeDetailView: View {
                     HStack(spacing: Space.xs) {
                         Text("in").foregroundStyle(Theme.text)
                         LinkText(text: meme.kind.categoryName, size: 12) { library.search(tag: meme.kind.kindTag) }
-                        Text("· добавлено " + Date(timeIntervalSince1970: Double(meme.createdAt) / 1000).formatted(date: .abbreviated, time: .shortened))
+                        Text("· added " + Date(timeIntervalSince1970: Double(meme.createdAt) / 1000).formatted(date: .abbreviated, time: .shortened))
                             .foregroundStyle(Theme.muted)
                     }
                     .zfont(12)
@@ -240,33 +240,33 @@ struct MemeDetailView: View {
     @ViewBuilder private var fields: some View {
         // No empty boxes for media without text — one quiet affordance instead.
         if hasAnyText || showFields {
-            Field(title: "Текст", text: $textExact, lines: 2, onCommit: saveFields)
+            Field(title: "Text", text: $textExact, lines: 2, onCommit: saveFields)
             if !isTextKind {
-                Field(title: "Дословно, как в меме, включая опечатки", text: $textVerbatim, lines: 2, onCommit: saveFields)
+                Field(title: "Verbatim — as written in the meme, typos included", text: $textVerbatim, lines: 2, onCommit: saveFields)
             }
-            Field(title: "Описание", text: $context, lines: 3, onCommit: saveFields)
-            HStack { Spacer(); GlassButton(title: "Сохранить", prominent: true) { saveFields() } }
+            Field(title: "Context", text: $context, lines: 3, onCommit: saveFields)
+            HStack { Spacer(); GlassButton(title: "Save", prominent: true) { saveFields() } }
                 .frame(maxWidth: Theme.fieldMaxWidth)
         } else {
-            LinkText(text: isTextKind ? "+ Добавить описание" : "+ Добавить текст или описание", size: 12) { showFields = true }
+            LinkText(text: isTextKind ? "+ Add context" : "+ Add text or context", size: 12) { showFields = true }
         }
     }
 
     private var tagsBlock: some View {
-        SectionBlock(title: "Теги") {
+        SectionBlock(title: "Tags") {
             if editingTags {
                 HStack(spacing: Space.s) {
-                    GlassButton(title: "Отмена") { editingTags = false; load() }
-                    GlassButton(title: "Сохранить теги", prominent: true) { saveTags() }
+                    GlassButton(title: "Cancel") { editingTags = false; load() }
+                    GlassButton(title: "Save tags", prominent: true) { saveTags() }
                 }
             } else {
-                LinkText(text: "Изменить", size: 12) { editingTags = true }
+                LinkText(text: "Edit", size: 12) { editingTags = true }
             }
         } content: {
-            tagRow("Обычные", tags.filter { $0.kind == .normal }, $generalLine, "небо облака трава", Theme.general)
-            tagRow("Мета", tags.filter { $0.kind == .meta }, $metaLine, "изображение источник_неизвестен", Theme.meta)
+            tagRow("General", tags.filter { $0.kind == .normal }, $generalLine, "stalin child glasses", Theme.general)
+            tagRow("Meta", tags.filter { $0.kind == .meta }, $metaLine, "2022 picture source_unknown", Theme.meta)
             if !editingTags && tags.isEmpty {
-                Text("Тегов пока нет.").zfont(12).foregroundStyle(Theme.muted)
+                Text("No tags yet.").zfont(12).foregroundStyle(Theme.muted)
             }
         }
     }
@@ -299,14 +299,14 @@ struct MemeDetailView: View {
         }
     }
 
-    /// The big "В избранное"-style button (Share) and a list of icon links under it.
+    /// The big "Add to Favourites"-style button (Share) and a list of icon links under it.
     @ViewBuilder private func actions(_ meme: Meme) -> some View {
         VStack(alignment: .leading, spacing: Space.m) {
             if let url = meme.kind == .tweet ? library.tweetShareURL(meme) : library.primaryAsset(of: meme.id).flatMap({ library.fileURL($0) }) {
                 ShareLink(item: url) {
                     HStack(spacing: Space.s) {
                         Image(systemName: "square.and.arrow.up").font(.system(size: 16, weight: .medium))
-                        Text("Поделиться").dfont(18, .regular)
+                        Text("Share").dfont(18, .regular)
                     }
                     .foregroundStyle(Theme.link)
                     .padding(.horizontal, Space.l).frame(height: 40)
@@ -318,25 +318,25 @@ struct MemeDetailView: View {
                 .buttonStyle(.plain).linkPointer()
             }
             VStack(alignment: .leading, spacing: Space.s) {
-                actionLink("Изменить теги", "tag") { editingTags = true }
-                if !hasAnyText && !showFields { actionLink(isTextKind ? "Добавить описание" : "Добавить текст или описание", "text.alignleft") { showFields = true } }
+                actionLink("Edit tags", "tag") { editingTags = true }
+                if !hasAnyText && !showFields { actionLink(isTextKind ? "Add context" : "Add text or context", "text.alignleft") { showFields = true } }
                 if meme.kind == .tweet {
                     if hasTweetMedia(meme) {
                         let asMedia = library.tweetModel(meme, withQuote: false).mediaOnly
-                        actionLink(asMedia ? "Показать как твит" : "Показать только медиа", asMedia ? "text.bubble" : "photo.on.rectangle") {
+                        actionLink(asMedia ? "Show as tweet" : "Show as media only", asMedia ? "text.bubble" : "photo.on.rectangle") {
                             library.toggleTweetDisplay(meme.id); load()
                         }
-                        actionLink("Добавить медиа как мем", "square.and.arrow.down.on.square") { _ = library.extractTweetMedia(meme.id) }
+                        actionLink("Add media as meme", "square.and.arrow.down.on.square") { _ = library.extractTweetMedia(meme.id) }
                     }
-                    actionLink("Экспорт в PNG", "photo") { exportTweetPNG(meme) }
+                    actionLink("Export as PNG", "photo") { exportTweetPNG(meme) }
                 }
-                if meme.payload.composite != nil { actionLink("Изменить коллаж…", "rectangle.split.2x1") { library.compositeEditor = .meme(meme.id) } }
+                if meme.payload.composite != nil { actionLink("Edit layout…", "rectangle.split.2x1") { library.compositeEditor = .meme(meme.id) } }
                 if MediaEditor.canCrop(meme.kind) || MediaEditor.canTrim(meme.kind), meme.payload.composite == nil {
                     actionLink(StagedDetailView.editTitle(meme.kind, edited: library.primaryAsset(of: meme.id)?.edit != nil),
                                StagedDetailView.editSymbol(meme.kind)) { library.editTarget = .meme(meme.id) }
                 }
-                if library.formats(of: meme.id).primary != nil { actionLink("Экспорт…", "square.and.arrow.down") { exporting = true } }
-                actionLink("Удалить", "trash", danger: true) { library.delete(meme.id); library.popDetailImmediate() }
+                if library.formats(of: meme.id).primary != nil { actionLink("Export…", "square.and.arrow.down") { exporting = true } }
+                actionLink("Delete", "trash", danger: true) { library.delete(meme.id); library.popDetailImmediate() }
             }
             .padding(.leading, Space.l)   // icons line up with the Share icon inside the button above
         }
@@ -349,12 +349,12 @@ struct MemeDetailView: View {
         }
     }
 
-    /// "Ещё из коллекции": the previous / next post as real thumbnails you can read.
+    /// "More from Posts": the previous / next post as real thumbnails you can read.
     @ViewBuilder private func moreFrom(_ meme: Meme) -> some View {
         let prev = library.neighbor(of: meme.id, -1).flatMap { library.meme($0) }
         let next = library.neighbor(of: meme.id, 1).flatMap { library.meme($0) }
         if prev != nil || next != nil {
-            SectionBlock(library.query.isEmpty ? "Ещё из коллекции" : "Ещё по этому запросу") {
+            SectionBlock(library.query.isEmpty ? "More from Posts" : "More from this search") {
                 HStack(alignment: .top, spacing: Space.l) {
                     neighbor(prev, next: false)
                     neighbor(next, next: true)
@@ -373,7 +373,7 @@ struct MemeDetailView: View {
                     ThumbCell(meme: m, size: neighborSize(m, box)).frame(width: box.width, height: box.height)
                         .contentShape(Rectangle())
                 }.buttonStyle(.plain).linkPointer()
-                LinkText(text: next ? "Далее ›" : "‹ Назад", size: 12, weight: .bold) { library.openDetailReplacing(m.id) }
+                LinkText(text: next ? "Next ›" : "‹ Previous", size: 12, weight: .bold) { library.openDetailReplacing(m.id) }
             } else {
                 Color.clear.frame(width: box.width, height: box.height)
             }
@@ -395,11 +395,11 @@ struct MemeDetailView: View {
         }
     }
 
-    /// "В подборках:" — related posts with their relation.
+    /// "Featured in:" — related posts with their relation.
     @ViewBuilder private func related(_ meme: Meme) -> some View {
         let rels = library.relations(of: meme.id)
         if !rels.isEmpty {
-            SectionBlock("Связанные") {
+            SectionBlock("Related") {
                 ForEach(rels, id: \.to.rawValue) { r in
                     let other = r.from == meme.id ? r.to : r.from
                     if let m = library.meme(other) {
@@ -407,7 +407,7 @@ struct MemeDetailView: View {
                             HStack(spacing: Space.m) {
                                 ThumbMini(meme: m).thumbShadow()
                                 VStack(alignment: .leading, spacing: Space.xs / 2) {
-                                    Text(localizedRelation(r.kind, outgoing: r.from == meme.id)).dfont(15).foregroundStyle(Theme.link)
+                                    Text(r.from == meme.id ? r.kind.rawValue.capitalized : "\(r.kind.rawValue.capitalized) of this").dfont(15).foregroundStyle(Theme.link)
                                     Text(m.kind.categoryName).zfont(11).foregroundStyle(Theme.muted)
                                 }
                             }
@@ -420,26 +420,26 @@ struct MemeDetailView: View {
     }
 
     @ViewBuilder private func details(_ meme: Meme) -> some View {
-        SectionBlock("Подробности") {
+        SectionBlock("Details") {
             Grid(alignment: .leading, horizontalSpacing: Space.m, verticalSpacing: Space.xs) {
-                row("Добавлено", Date(timeIntervalSince1970: Double(meme.createdAt) / 1000).formatted(date: .long, time: .shortened))
+                row("Added", Date(timeIntervalSince1970: Double(meme.createdAt) / 1000).formatted(date: .long, time: .shortened))
                 if let a = library.primaryAsset(of: meme.id) {
-                    if let n = a.originalName { row("Файл", n) }
-                    row("Формат", a.formatLabel + (a.compatibility(kind: meme.kind) == .popular ? " (popular)" : " (uncommon)"))
-                    if let e = a.edit { row("Изменено", StagedDetailView.describe(e, kind: meme.kind)) }
+                    if let n = a.originalName { row("File", n) }
+                    row("Format", a.formatLabel + (a.compatibility(kind: meme.kind) == .popular ? " (popular)" : " (uncommon)"))
+                    if let e = a.edit { row("Edited", StagedDetailView.describe(e, kind: meme.kind)) }
                     if let l = meme.payload.composite?.layout {
-                        row("Коллаж", "\(library.assets(of: meme.id).filter { $0.role == .part }.count) изображений, \(l.arrangement.label.lowercased())")
+                        row("Combined", "\(library.assets(of: meme.id).filter { $0.role == .part }.count) pictures, \(l.arrangement.label.lowercased())")
                     }
                     if let o = library.formats(of: meme.id).original {
-                        row("Оригинал", "\(o.formatLabel) · \(ByteCountFormatter.string(fromByteCount: o.bytes, countStyle: .file))")
+                        row("Original", "\(o.formatLabel) · \(ByteCountFormatter.string(fromByteCount: o.bytes, countStyle: .file))")
                     }
-                    if let w = a.width, let h = a.height, w > 0, h > 0 { row("Разрешение", "\(w)×\(h)") }
-                    if let ms = a.durationMs, ms > 0 { row("Длительность", Duration.milliseconds(ms).formatted(.time(pattern: .minuteSecond))) }
-                    row("Размер файла", ByteCountFormatter.string(fromByteCount: a.bytes, countStyle: .file) + " · " + a.ext)
+                    if let w = a.width, let h = a.height, w > 0, h > 0 { row("Resolution", "\(w)×\(h)") }
+                    if let ms = a.durationMs, ms > 0 { row("Duration", Duration.milliseconds(ms).formatted(.time(pattern: .minuteSecond))) }
+                    row("File size", ByteCountFormatter.string(fromByteCount: a.bytes, countStyle: .file) + " · " + a.ext)
                     row("SHA-256", String(a.sha256.prefix(12)) + "…")
                 }
                 if case .tweet(let p) = meme.payload {
-                    row("Твит", p.url)
+                    row("Tweet", p.url)
                     if let w = p.waybackURL { row("Wayback", w) }
                 }
             }
@@ -498,11 +498,11 @@ struct MediaViewer: View {
         switch meme.kind {
         case .gif:
             if let url { AnimatedGif(url: url) }   // plays in place, like the gallery tile
-            else { Text("Не удалось загрузить изображение").foregroundStyle(Theme.muted).frame(height: 200) }
+            else { Text("Cannot load image").foregroundStyle(Theme.muted).frame(height: 200) }
         case .image:
             if let url, let img = library.displayImage(url) {
                 Image(platform: img).resizable().scaledToFit()
-            } else { Text("Не удалось загрузить изображение").foregroundStyle(Theme.muted).frame(height: 200) }
+            } else { Text("Cannot load image").foregroundStyle(Theme.muted).frame(height: 200) }
         case .video:
             if let asset, let playable = library.playableURL(for: asset) {
                 // The still underneath shows until the player has its first frame (no black flash).
@@ -512,10 +512,10 @@ struct MediaViewer: View {
                 }
             } else if let asset {
                 PreparingPreview(meme: meme, asset: asset)
-            } else { Text("Видеофайл отсутствует").foregroundStyle(Theme.muted) }
+            } else { Text("Missing video file").foregroundStyle(Theme.muted) }
         case .audio:
             if let url { StablePlayer(url: url, isAudio: true) }
-            else { Text("Аудиофайл отсутствует").foregroundStyle(Theme.muted) }
+            else { Text("Missing audio file").foregroundStyle(Theme.muted) }
         case .text, .article:
             // Card hugs the text (up to a readable width), left-aligned — not a full-width void.
             Text((meme.textVerbatim ?? meme.textExact ?? "").trimmingCharacters(in: .whitespacesAndNewlines))
@@ -546,8 +546,8 @@ struct TweetThreadView: View {
         VStack(alignment: .leading, spacing: 0) {
             if pending.parent {
                 HStack(spacing: Space.s) {
-                    GlassButton(title: "Загрузить всю цепочку", symbol: "arrow.up.to.line") { library.loadReplyChain(of: meme.id) }
-                    GlassButton(title: "Только предыдущий твит", symbol: "arrow.up") { library.loadReplyParent(of: meme.id) }
+                    GlassButton(title: "Load the whole thread", symbol: "arrow.up.to.line") { library.loadReplyChain(of: meme.id) }
+                    GlassButton(title: "Previous tweet only", symbol: "arrow.up") { library.loadReplyParent(of: meme.id) }
                 }
                 .padding(.bottom, Space.m)
             }
@@ -577,10 +577,10 @@ struct PreparingPreview: View {
             VStack(spacing: Space.s) {
                 if library.canConvert {
                     MBSpinner(size: 22)
-                    Text("Готовим предпросмотр \(asset.formatLabel)…").zfont(12, .bold).foregroundStyle(Theme.text)
+                    Text("Preparing a playable preview of \(asset.formatLabel)…").zfont(12, .bold).foregroundStyle(Theme.text)
                 } else {
                     Image(systemName: "film").font(.system(size: 22)).foregroundStyle(Theme.faint)
-                    Text("Для воспроизведения \(asset.formatLabel) на этом Mac нужен ffmpeg.").zfont(12).foregroundStyle(Theme.text)
+                    Text("This Mac can't play \(asset.formatLabel) without the media tools.").zfont(12).foregroundStyle(Theme.text)
                 }
             }
             .padding(Space.m)

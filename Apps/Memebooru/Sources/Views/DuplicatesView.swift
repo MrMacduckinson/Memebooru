@@ -7,17 +7,17 @@ struct DuplicatesView: View {
 
     var body: some View {
         PageColumn {
-            PageHeader(title: "Дубликаты", subtitle: plural(library.duplicateClusters.count, "group") + (library.containments.isEmpty ? "" : " · " + plural(library.containments.count, "crop"))) {
-                GlassButton(title: "Проверить коллекцию", symbol: "magnifyingglass", prominent: true) { library.scanDuplicates() }
+            PageHeader(title: "Duplicates", subtitle: plural(library.duplicateClusters.count, "group") + (library.containments.isEmpty ? "" : " · " + plural(library.containments.count, "crop"))) {
+                GlassButton(title: "Scan collection", symbol: "magnifyingglass", prominent: true) { library.scanDuplicates() }
             }
             if library.duplicateClusters.isEmpty && library.containments.isEmpty {
-                EmptyState(icon: "square.on.square.dashed", title: "Дубликаты пока не найдены",
-                           subtitle: "Проверка сравнивает содержимое файлов и визуальные признаки, а также ищет изображения, вырезанные из других.")
+                EmptyState(icon: "square.on.square.dashed", title: "No duplicates found yet",
+                           subtitle: "A scan compares exact bytes, perceptual hashes, and — via feature matching — whether one image is a crop of another.")
             }
             ForEach(library.duplicateClusters) { ClusterRow(cluster: $0) }
 
             if !library.containments.isEmpty {
-                Text("Фрагменты — одно изображение внутри другого").dfont(18, .regular).padding(.top, Space.s)
+                Text("Crops — one image inside another").dfont(18, .regular).padding(.top, Space.s)
                 ForEach(library.containments) { ContainmentRow(item: $0) }
             }
         }
@@ -59,10 +59,10 @@ struct ContainmentRow: View {
 
     private var pair: some View {
         HStack(alignment: .center, spacing: Space.m) {
-            labeled(item.container, "Оригинал")
+            labeled(item.container, "Original")
             Image(systemName: "arrow.right").font(.system(size: 12, weight: .semibold)).foregroundStyle(Theme.faint)
-            labeled(item.contained, "Обрезка")
-            Text("Совпадающих точек: \(item.inliers)").zfont(11).foregroundStyle(Theme.muted).fixedSize()
+            labeled(item.contained, "Crop")
+            Text("\(item.inliers) matching points").zfont(11).foregroundStyle(Theme.muted).fixedSize()
                 .padding(.leading, Space.s)
         }
     }
@@ -77,9 +77,9 @@ struct ContainmentRow: View {
     @Environment(Library.self) private var library
     private var buttons: some View {
         HStack(spacing: Space.s) {
-            GlassButton(title: "Удалить фрагмент", symbol: "trash", tint: Theme.danger) { library.deleteCrop(item) }
-            GlassButton(title: "Оставить оба") { library.markContains(item) }
-            GlassButton(title: "Не связаны") { library.dismissContainment(item) }
+            GlassButton(title: "Delete crop", symbol: "trash", tint: Theme.danger) { library.deleteCrop(item) }
+            GlassButton(title: "Keep both") { library.markContains(item) }
+            GlassButton(title: "Not related") { library.dismissContainment(item) }
         }
     }
 }
@@ -110,15 +110,15 @@ struct ClusterRow: View {
     private var clusterTitle: some View {
         HStack(alignment: .firstTextBaseline, spacing: Space.s) {
             Text("\(cluster.members.count) copies").dfont(18).lineLimit(1).fixedSize()
-            Text(cluster.allExact ? "одинаковые файлы"
-                 : cluster.maxDistance == 0 ? "визуально одинаковые"
-                 : "похожие, расстояние ≤ \(cluster.maxDistance)").zfont(12).foregroundStyle(Theme.muted).lineLimit(1).fixedSize()
+            Text(cluster.allExact ? "identical files"
+                 : cluster.maxDistance == 0 ? "visually identical"
+                 : "similar, distance ≤ \(cluster.maxDistance)").zfont(12).foregroundStyle(Theme.muted).lineLimit(1).fixedSize()
         }
     }
     private var clusterButtons: some View {
         HStack(spacing: Space.s) {
-            GlassButton(title: "Все варианты") { library.markVariants(cluster) }
-            GlassButton(title: "Не дубликаты") { library.dismiss(cluster) }
+            GlassButton(title: "All variants") { library.markVariants(cluster) }
+            GlassButton(title: "Not duplicates") { library.dismiss(cluster) }
         }
     }
 
@@ -132,7 +132,7 @@ struct ClusterRow: View {
                 Text(facts(asset)).zfont(11).foregroundStyle(Theme.muted).lineLimit(1)
                 HStack(spacing: Space.s) { ForEach(library.tags(of: id).prefix(4), id: \.id) { t in Text(t.name).foregroundStyle(Theme.tagColor(t.kind)) } }
                     .zfont(11).lineLimit(1)
-                GlassButton(title: "Оставить этот", prominent: true) { library.keep(id, in: cluster) }
+                GlassButton(title: "Keep this one", prominent: true) { library.keep(id, in: cluster) }
                     .padding(.top, Space.s)
             }
             .frame(width: w, alignment: .leading)

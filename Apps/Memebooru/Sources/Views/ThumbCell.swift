@@ -42,7 +42,7 @@ struct ThumbCell: View {
                     .onHover { if $0 { library.requestPreview(a) } }   // uncommon video: make its preview on first hover
             } else { Theme.surfaceSunk }
         case .audio:
-            LitCard(label: "АУДИО") {
+            LitCard(label: "AUDIO") {
                 VStack(spacing: Space.s) {
                     Button { library.toggleAudioPreview(meme.id) } label: {
                         Image(systemName: library.audioPlayingID == meme.id ? "pause.fill" : "play.fill")
@@ -103,7 +103,7 @@ struct CardPreview: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading).padding(Space.xs)
             }
         case .audio:
-            LitCard(label: "АУДИО") {
+            LitCard(label: "AUDIO") {
                 Image(systemName: "waveform").font(.system(size: 22)).foregroundStyle(Theme.faint)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }

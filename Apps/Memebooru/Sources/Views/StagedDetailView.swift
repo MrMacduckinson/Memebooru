@@ -24,8 +24,8 @@ struct StagedGalleryCell: View {
             .accessibilityIdentifier("stagedCell")
             .accessibilityLabel(item.reviewTitle)
             .contextMenu {
-                Button(item.willConvert && library.canConvert ? "Конвертировать и сохранить" : "Сохранить") { library.commit(item) }
-                Button("Убрать", role: .destructive) { library.discard(item) }
+                Button(item.willConvert && library.canConvert ? "Convert & commit" : "Commit") { library.commit(item) }
+                Button("Discard", role: .destructive) { library.discard(item) }
             }
 
             VStack(spacing: Space.xs / 2) {
@@ -108,7 +108,7 @@ struct StagedArt: View {
                 }
             }
         case .audio:
-            LitCard(label: "АУДИО") {
+            LitCard(label: "AUDIO") {
                 Image(systemName: "waveform").font(.system(size: 22)).foregroundStyle(Theme.faint)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
@@ -139,12 +139,12 @@ struct StagedArt: View {
 }
 
 extension StagedDetailView {
-    /// "Обрезать края…", "Обрезать кадр и длительность…", "Обрезать длительность…" — and "Изменить обрезку…" once done.
+    /// "Crop edges…", "Crop and trim…", "Trim…" — and "Edit crop…" once done.
     static func editTitle(_ kind: MemeKind, edited: Bool) -> String {
         switch kind {
-        case .audio: edited ? "Изменить длительность…" : "Обрезать тишину по краям…"
-        case .video: edited ? "Изменить обрезку кадра и длительности…" : "Обрезать кадр и длительность…"
-        default: edited ? "Изменить обрезку…" : "Обрезать края…"
+        case .audio: edited ? "Edit trim…" : "Trim quiet ends…"
+        case .video: edited ? "Edit crop and trim…" : "Crop and trim…"
+        default: edited ? "Edit crop…" : "Crop edges…"
         }
     }
     static func editSymbol(_ kind: MemeKind) -> String { kind == .audio ? "waveform.path" : "crop" }
@@ -152,8 +152,8 @@ extension StagedDetailView {
     /// "cropped to 200 × 120, 0:01.500–0:04.000 kept".
     static func describe(_ e: MediaEdit, kind: MemeKind) -> String {
         var parts: [String] = []
-        if let c = e.crop { parts.append("обрезано до \(c.width) × \(c.height)") }
-        if let t = e.trim { parts.append("оставлено \(TimeField.format(t.startMs))–\(TimeField.format(t.endMs))") }
+        if let c = e.crop { parts.append("cropped to \(c.width) × \(c.height)") }
+        if let t = e.trim { parts.append("\(TimeField.format(t.startMs))–\(TimeField.format(t.endMs)) kept") }
         return parts.joined(separator: ", ") + " (original kept)"
     }
 }
@@ -273,11 +273,11 @@ struct StagedDetailView: View {
 
     private func breadcrumb(_ item: StagedItem) -> some View {
         HStack(spacing: Space.xs) {
-            LinkText(text: "‹ Входящие", size: 12) { save(item); library.popDetail() }.accessibilityIdentifier("stagedBack")
+            LinkText(text: "‹ Staging", size: 12) { save(item); library.popDetail() }.accessibilityIdentifier("stagedBack")
             Text("/").zfont(12).foregroundStyle(Theme.faint)
             LinkText(text: item.kind.categoryName, size: 12) { save(item); library.stagingKind = item.kind; library.popDetail() }
             if let n = library.shownStaged.firstIndex(where: { $0.id == item.id }) {
-                Text("· \(n + 1) из \(library.shownStaged.count)").zfont(12).foregroundStyle(Theme.muted)
+                Text("· \(n + 1) of \(library.shownStaged.count)").zfont(12).foregroundStyle(Theme.muted)
                     .accessibilityIdentifier("stagedPosition")
             }
         }
@@ -292,9 +292,9 @@ struct StagedDetailView: View {
             }
             titleBlock(item)
             VStack(alignment: .leading, spacing: Space.m) { fields(item) }
-            SectionBlock("Теги") {
-                tagField("Обычные", $userTags, "небо облака трава", Theme.general, item)
-                tagField("Мета", $metaTags, "изображение источник_неизвестен", Theme.meta, item)
+            SectionBlock("Tags") {
+                tagField("General", $userTags, "stalin child glasses", Theme.general, item)
+                tagField("Meta", $metaTags, "2022 picture source_unknown", Theme.meta, item)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -323,7 +323,7 @@ struct StagedDetailView: View {
                 if let url, Library.avPlayable(ext: item.ext, codecs: item.info.codecs) {
                     MediaPlayer(url: url)
                 } else {
-                    Text("\(item.formatLabel) можно воспроизвести после конвертации при сохранении.").zfont(12, .bold).foregroundStyle(Theme.text)
+                    Text("\(item.formatLabel) plays here once it's converted on commit.").zfont(12, .bold).foregroundStyle(Theme.text)
                         .padding(Space.m).background(RoundedRectangle(cornerRadius: 4).fill(Theme.paper.opacity(0.9)))
                 }
             }
@@ -352,7 +352,7 @@ struct StagedDetailView: View {
             VStack(alignment: .leading, spacing: Space.s) {
                 HStack(alignment: .firstTextBaseline, spacing: Space.iconLabel) {
                     Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 11)).foregroundStyle(Theme.danger)
-                    Text("Возможных дубликатов в коллекции: \(dups.count)").zfont(12, .bold).foregroundStyle(Theme.danger)
+                    Text("\(dups.count) possible duplicate\(dups.count == 1 ? "" : "s") already here").zfont(12, .bold).foregroundStyle(Theme.danger)
                 }
                 FlowLayout(spacing: Space.s) {
                     ForEach(Array(dups.enumerated()), id: \.offset) { _, h in
@@ -383,7 +383,7 @@ struct StagedDetailView: View {
                     HStack(spacing: Space.xs) {
                         Text("in").foregroundStyle(Theme.text)
                         LinkText(text: item.kind.categoryName, size: 12) { save(item); library.stagingKind = item.kind; library.popDetail() }
-                        Text("· источник: \(item.source) · во входящих " + Date(timeIntervalSince1970: Double(item.addedAt) / 1000).formatted(date: .abbreviated, time: .shortened))
+                        Text("· from \(item.source) · staged " + Date(timeIntervalSince1970: Double(item.addedAt) / 1000).formatted(date: .abbreviated, time: .shortened))
                             .foregroundStyle(Theme.muted)
                     }
                     .zfont(12)
@@ -402,13 +402,13 @@ struct StagedDetailView: View {
 
     @ViewBuilder private func fields(_ item: StagedItem) -> some View {
         if hasAnyText || showFields {
-            Field(title: "Текст", text: $textExact, lines: 2) { save(item) }
+            Field(title: "Text", text: $textExact, lines: 2) { save(item) }
             if !isTextKind {
-                Field(title: "Дословно, как в меме, включая опечатки", text: $textVerbatim, lines: 2) { save(item) }
+                Field(title: "Verbatim — as written in the meme, typos included", text: $textVerbatim, lines: 2) { save(item) }
             }
-            Field(title: "Описание", text: $context, lines: 3) { save(item) }
+            Field(title: "Context", text: $context, lines: 3) { save(item) }
         } else {
-            LinkText(text: isTextKind ? "+ Добавить описание" : "+ Добавить текст или описание", size: 12) { showFields = true }
+            LinkText(text: isTextKind ? "+ Add context" : "+ Add text or context", size: 12) { showFields = true }
         }
     }
 
@@ -435,7 +435,7 @@ struct StagedDetailView: View {
         let prev = library.stagedNeighbor(of: item.id, -1)
         let next = library.stagedNeighbor(of: item.id, 1)
         if prev != nil || next != nil {
-            SectionBlock("Ещё из входящих") {
+            SectionBlock("More from Staging") {
                 HStack(alignment: .top, spacing: Space.l) {
                     neighbor(prev, item, next: false)
                     neighbor(next, item, next: true)
@@ -455,7 +455,7 @@ struct StagedDetailView: View {
                         .frame(width: box.width, height: box.height)
                         .contentShape(Rectangle())
                 }.buttonStyle(.plain).linkPointer()
-                LinkText(text: next ? "Далее ›" : "‹ Назад", size: 12, weight: .bold) { go(item, next ? 1 : -1) }
+                LinkText(text: next ? "Next ›" : "‹ Previous", size: 12, weight: .bold) { go(item, next ? 1 : -1) }
                     .accessibilityIdentifier(next ? "stagedNext" : "stagedPrevious")
             } else {
                 Color.clear.frame(width: box.width, height: box.height)
@@ -469,7 +469,7 @@ struct StagedDetailView: View {
             Button { library.commitAndAdvance(save(item)) } label: {
                 HStack(spacing: Space.s) {
                     Image(systemName: "checkmark").font(.system(size: 16, weight: .semibold))
-                    Text(item.willConvert && library.canConvert ? "Конвертировать и сохранить" : "Сохранить").dfont(18, .regular)
+                    Text(item.willConvert && library.canConvert ? "Convert & commit" : "Commit").dfont(18, .regular)
                 }
                 .foregroundStyle(Theme.goText)
                 .padding(.horizontal, Space.l).frame(height: 40)
@@ -479,23 +479,23 @@ struct StagedDetailView: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain).linkPointer()
-            .help("Сохранить в коллекцию и открыть следующее (⌘↩)")
+            .help("Add it to the collection and open the next one (⌘↩)")
             .accessibilityIdentifier("stagedCommit")
 
             VStack(alignment: .leading, spacing: Space.s) {
                 if item.kind == .tweet, !library.tweetModel(staged: item, withQuote: false).media.isEmpty {
                     let asMedia = library.tweetModel(staged: item, withQuote: false).mediaOnly
-                    actionLink(asMedia ? "Показать как твит" : "Показать только медиа", asMedia ? "text.bubble" : "photo.on.rectangle") {
+                    actionLink(asMedia ? "Show as tweet" : "Show as media only", asMedia ? "text.bubble" : "photo.on.rectangle") {
                         library.toggleTweetDisplay(staged: save(item))
                     }
                 }
                 if item.payload.composite != nil {
-                    actionLink("Изменить коллаж…", "rectangle.split.2x1", id: "stagedEditLayout") { library.compositeEditor = .staged(save(item).id) }
-                    actionLink("Разделить на изображения: \(library.staging?.parts(item).count ?? 2)", "square.split.2x1", id: "stagedSplit") {
+                    actionLink("Edit layout…", "rectangle.split.2x1", id: "stagedEditLayout") { library.compositeEditor = .staged(save(item).id) }
+                    actionLink("Split into \(library.staging?.parts(item).count ?? 2) pictures", "square.split.2x1", id: "stagedSplit") {
                         library.splitStaged(save(item))
                     }
                 } else if Library.combinable(item) {
-                    actionLink("Объединить с другими изображениями…", "rectangle.split.2x1", id: "stagedCombineWith") {
+                    actionLink("Combine with other pictures…", "rectangle.split.2x1", id: "stagedCombineWith") {
                         save(item); library.startCombining(with: item)
                     }
                 }
@@ -504,11 +504,11 @@ struct StagedDetailView: View {
                         library.editTarget = .staged(save(item).id)
                     }
                 }
-                actionLink("Убрать", "trash", danger: true, id: "stagedDiscard") { library.discardAndAdvance(item) }
+                actionLink("Discard", "trash", danger: true, id: "stagedDiscard") { library.discardAndAdvance(item) }
             }
             .padding(.leading, Space.l)   // icons line up with the Commit icon inside the button above
 
-            Text("⌘↩ сохранить · ⌘⌫ убрать · ⌘← ⌘→ назад / далее").zfont(11).foregroundStyle(Theme.muted)
+            Text("⌘↩ commit · ⌘⌫ discard · ⌘← ⌘→ previous / next").zfont(11).foregroundStyle(Theme.muted)
         }
     }
 
@@ -533,21 +533,21 @@ struct StagedDetailView: View {
     }
 
     private func details(_ item: StagedItem) -> some View {
-        SectionBlock("Подробности") {
+        SectionBlock("Details") {
             Grid(alignment: .leading, horizontalSpacing: Space.m, verticalSpacing: Space.xs) {
-                row("Во входящих", Date(timeIntervalSince1970: Double(item.addedAt) / 1000).formatted(date: .long, time: .shortened))
-                row("Источник", item.source)
-                if let n = item.originalName, item.kind != .tweet { row("Файл", n) }
+                row("Staged", Date(timeIntervalSince1970: Double(item.addedAt) / 1000).formatted(date: .long, time: .shortened))
+                row("From", item.source)
+                if let n = item.originalName, item.kind != .tweet { row("File", n) }
                 if item.kind != .tweet && item.kind != .text {
-                    row("Формат", item.formatLabel + (item.compatibility == .popular ? " (popular)" : " (uncommon)"))
-                    if let e = item.edit { row("Изменено", Self.describe(e, kind: item.kind)) }
-                    if let l = item.payload.composite?.layout { row("Коллаж", "\(library.staging?.parts(item).count ?? 0) pictures, \(l.arrangement.label.lowercased())") }
+                    row("Format", item.formatLabel + (item.compatibility == .popular ? " (popular)" : " (uncommon)"))
+                    if let e = item.edit { row("Edited", Self.describe(e, kind: item.kind)) }
+                    if let l = item.payload.composite?.layout { row("Combined", "\(library.staging?.parts(item).count ?? 0) pictures, \(l.arrangement.label.lowercased())") }
                 }
-                if let w = item.info.width, let h = item.info.height, w > 0, h > 0 { row("Разрешение", "\(w)×\(h)") }
-                if let ms = item.info.durationMs, ms > 0 { row("Длительность", Duration.milliseconds(ms).formatted(.time(pattern: .minuteSecond))) }
-                if item.kind != .tweet { row("Размер файла", ByteCountFormatter.string(fromByteCount: item.bytes, countStyle: .file)) }
+                if let w = item.info.width, let h = item.info.height, w > 0, h > 0 { row("Resolution", "\(w)×\(h)") }
+                if let ms = item.info.durationMs, ms > 0 { row("Duration", Duration.milliseconds(ms).formatted(.time(pattern: .minuteSecond))) }
+                if item.kind != .tweet { row("File size", ByteCountFormatter.string(fromByteCount: item.bytes, countStyle: .file)) }
                 if case .tweet(let p) = item.payload {
-                    row("Твит", p.url)
+                    row("Tweet", p.url)
                     if let w = p.waybackURL { row("Wayback", w) }
                 }
             }

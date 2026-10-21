@@ -37,7 +37,7 @@ extension Library {
     func applyEdit(_ target: EditTarget, _ edit: MediaEdit?) {
         guard let staging, let c = collection else { return }
         editTarget = nil
-        busy = edit == nil ? "Восстанавливаем оригинал…" : "Обрезаем…"
+        busy = edit == nil ? "Restoring the original…" : "Cropping…"
         let analyzer = analyzer
         Task {
             switch target {

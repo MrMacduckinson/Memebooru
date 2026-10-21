@@ -62,7 +62,7 @@ final class MemebooruUITests: XCTestCase {
 
     private func goToStaging() {
         el("nav.Staging").click()
-        waitText("pageTitle", "Входящие")
+        waitText("pageTitle", "Staging")
     }
 
     private func key(_ k: XCUIKeyboardKey) { app.typeKey(k, modifierFlags: .command) }
@@ -86,8 +86,8 @@ final class MemebooruUITests: XCTestCase {
 
     func testLaunchShowsEmptyPosts() throws {
         launch(try .standard())
-        waitText("pageTitle", "Коллекция")
-        waitText("emptyState", "В коллекции пока пусто")
+        waitText("pageTitle", "Posts")
+        waitText("emptyState", "No posts yet")
         XCTAssertTrue(el("nav.Posts").isSelected)
         XCTAssertEqual(postCells.count, 0)
     }
@@ -145,7 +145,7 @@ final class MemebooruUITests: XCTestCase {
         wait("one match") { stagedCells.count == 1 && stagedCell("frog-gamma").exists }
 
         type(" nothing-like-this", into: field)
-        waitText("emptyState", "Нет совпадений")
+        waitText("emptyState", "Nothing matches")
         XCTAssertEqual(stagedCells.count, 0)
 
         type("", into: field, replacing: true)
@@ -200,7 +200,7 @@ final class MemebooruUITests: XCTestCase {
 
         // The committed picture is a post now.
         el("nav.Posts").click()
-        waitText("pageTitle", "Коллекция")
+        waitText("pageTitle", "Posts")
         wait("one post") { postCells.count == 1 }
         XCTAssertEqual(postCells.firstMatch.label, "cat-alpha")
         postCells.firstMatch.click()
@@ -225,7 +225,7 @@ final class MemebooruUITests: XCTestCase {
         el("stagedCommit").click()
         waitGone(el("stagedTitle"), "the page to close when nothing is left")
         waitText("pageSubtitle", "0 pending")
-        waitText("emptyState", "Входящие пусты")
+        waitText("emptyState", "Nothing pending")
     }
 
     func testSearchBox() throws {
@@ -234,26 +234,26 @@ final class MemebooruUITests: XCTestCase {
             try s.commit(s.picture("plain-cat", pattern: 2))
             try s.commit(s.text("a committed text"))
         })
-        waitText("pageTitle", "Коллекция")
+        waitText("pageTitle", "Posts")
         wait("three posts") { postCells.count == 3 }
 
         let search = el("searchField")
         type("froggy\r", into: search)
-        waitText("pageTitle", "Поиск")
+        waitText("pageTitle", "Search")
         wait("one result") { postCells.count == 1 }
         XCTAssertEqual(postCells.firstMatch.label, "froggy")          // a post's title is its tags
 
         // Searching from another page brings Posts back.
         goToStaging()
         type("text\r", into: search, replacing: true)                  // the kind tag
-        waitText("pageTitle", "Поиск")
+        waitText("pageTitle", "Search")
         wait("the text post") { postCells.count == 1 }
 
         type("no_such_tag\r", into: search, replacing: true)
-        waitText("emptyState", "Ничего не найдено")
+        waitText("emptyState", "Nothing found")
 
         type("", into: search, replacing: true)
-        waitText("pageTitle", "Коллекция")
+        waitText("pageTitle", "Posts")
         wait("all posts") { postCells.count == 3 }
 
         // A post opens from the grid and its breadcrumb goes back.

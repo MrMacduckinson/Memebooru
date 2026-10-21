@@ -31,7 +31,7 @@ enum XKeychain {
     }
 
     /// Reads the session, prompting Touch ID. Returns nil if the item is absent or the user cancels.
-    static func load(reason: String = "Разблокировать сеанс x.com") -> XSession? {
+    static func load(reason: String = "Unlock your x.com session") -> XSession? {
         let ctx = LAContext()
         ctx.localizedReason = reason
         var query = base()

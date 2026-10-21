@@ -12,7 +12,7 @@ struct EditSheet: View {
         if let s = library.editSource(target) {
             if s.kind == .audio { TrimEditor(target: target, source: s) } else { CropEditor(target: target, source: s) }
         } else {
-            Text("Этот файл нельзя редактировать.").padding(Space.xl)
+            Text("This file can't be edited.").padding(Space.xl)
         }
     }
 }
@@ -52,9 +52,9 @@ struct CropEditor: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Space.l) {
             HStack(alignment: .firstTextBaseline) {
-                Text(isVideo ? "Обрезка кадра и длительности" : "Обрезка").dfont(22).foregroundStyle(Theme.text)
+                Text(isVideo ? "Crop and trim" : "Crop").dfont(22).foregroundStyle(Theme.text)
                 Spacer()
-                Text("\(rect.width) × \(rect.height) из \(size.width) × \(size.height)").zfont(12).foregroundStyle(Theme.muted).monospacedDigit()
+                Text("\(rect.width) × \(rect.height) of \(size.width) × \(size.height)").zfont(12).foregroundStyle(Theme.muted).monospacedDigit()
             }
             Rule()
             let stack = compact ? AnyLayout(VStackLayout(spacing: Space.l)) : AnyLayout(HStackLayout(alignment: .top, spacing: Space.xl))
@@ -68,11 +68,11 @@ struct CropEditor: View {
             if isVideo && duration > 0 {
                 VStack(alignment: .leading, spacing: Space.xs) {
                     HStack(spacing: Space.m) {
-                        SectionLabel(text: "Оставить")
-                        if peaks == nil { Text(loadingSound ? "Читаем звуковую дорожку…" : "Без звука").zfont(11).foregroundStyle(Theme.muted) }
+                        SectionLabel(text: "Keep")
+                        if peaks == nil { Text(loadingSound ? "Reading the sound…" : "No sound").zfont(11).foregroundStyle(Theme.muted) }
                         Spacer()
                         if peaks != nil {
-                            LinkText(text: "Найти тишину по краям", size: 12) { Task { await findQuietEnds() } }
+                            LinkText(text: "Find quiet ends", size: 12) { Task { await findQuietEnds() } }
                         }
                     }
                     TrimBar(durationMs: duration, range: $trim, peaks: peaks) { ms in
@@ -84,8 +84,8 @@ struct CropEditor: View {
             HStack {
                 Text(note).zfont(12).foregroundStyle(Theme.muted)
                 Spacer()
-                GlassButton(title: "Отмена") { dismiss() }.keyboardShortcut(.cancelAction)
-                GlassButton(title: "Применить", symbol: "checkmark", prominent: true) { library.applyEdit(target, currentEdit) }
+                GlassButton(title: "Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
+                GlassButton(title: "Apply", symbol: "checkmark", prominent: true) { library.applyEdit(target, currentEdit) }
                     .keyboardShortcut(.defaultAction)
                     .disabled(image == nil)
             }
@@ -112,7 +112,7 @@ struct CropEditor: View {
         await loadFrame()
         if let c = source.edit?.crop {
             rect = c.clamped(width: size.width, height: size.height)
-            note = "Уже обрезано. Измените границы или выберите «Без обрезки»."
+            note = "Cropped earlier; change it, or choose No crop."
         } else {
             await detect()
         }
@@ -131,14 +131,14 @@ struct CropEditor: View {
     private func findQuietEnds() async {
         if let r = await library.detectSilence(source) {
             trim = r
-            note = "Тишина: \(TimeField.format(r.startMs)) в начале и \(TimeField.format(duration - r.endMs)) в конце."
+            note = "Cut \(TimeField.format(r.startMs)) of quiet at the start and \(TimeField.format(duration - r.endMs)) at the end."
         } else {
-            note = "Тишина по краям не найдена."
+            note = "No quiet ends found."
         }
     }
 
     private func loadFrame() async {
-        guard let f = await library.editFrame(source, at: fraction) else { note = "Не удалось прочитать файл."; return }
+        guard let f = await library.editFrame(source, at: fraction) else { note = "Couldn't read this file."; return }
         let first = image == nil
         image = f.image; size = f.size
         if first { rect = full }
@@ -149,10 +149,10 @@ struct CropEditor: View {
         defer { detecting = false }
         if let r = await library.detectBorders(source) {
             rect = r
-            note = "Однотонные края: слева \(r.x), сверху \(r.y), справа \(size.width - r.x - r.width), снизу \(size.height - r.y - r.height)."
+            note = "Cut plain borders: \(r.x) left, \(r.y) top, \(size.width - r.x - r.width) right, \(size.height - r.y - r.height) bottom."
         } else {
             rect = full
-            note = "Однотонные края не найдены. Укажите границы вручную."
+            note = "No plain borders found — drag the edges to crop."
         }
     }
 
@@ -286,14 +286,14 @@ struct CropEditor: View {
 
     private var zoomBar: some View {
         HStack(spacing: Space.m) {
-            GlassIconButton(symbol: "minus.magnifyingglass") { setZoom(zoom / 2) }.help("Уменьшить")
-            GlassIconButton(symbol: "plus.magnifyingglass") { setZoom(zoom * 2) }.help("Увеличить жестом или двойным нажатием")
-            GlassButton(title: "Вписать") { zoom = 1; pan = .zero }
-            Text(zoom <= 1.001 ? "Всё изображение" : String(format: "%.0f×", zoom)).zfont(11).foregroundStyle(Theme.muted).monospacedDigit()
+            GlassIconButton(symbol: "minus.magnifyingglass") { setZoom(zoom / 2) }.help("Zoom out")
+            GlassIconButton(symbol: "plus.magnifyingglass") { setZoom(zoom * 2) }.help("Zoom in (pinch works too; double-click toggles)")
+            GlassButton(title: "Fit") { zoom = 1; pan = .zero }
+            Text(zoom <= 1.001 ? "Whole picture" : String(format: "%.0f×", zoom)).zfont(11).foregroundStyle(Theme.muted).monospacedDigit()
             Spacer()
-            Text("Рассмотреть").zfont(11).foregroundStyle(Theme.muted)
-            GlassButton(title: "Сверху слева") { focus(onX: rect.x, y: rect.y) }
-            GlassButton(title: "Снизу справа") { focus(onX: rect.x + rect.width, y: rect.y + rect.height) }
+            Text("Look closely at").zfont(11).foregroundStyle(Theme.muted)
+            GlassButton(title: "Top left") { focus(onX: rect.x, y: rect.y) }
+            GlassButton(title: "Bottom right") { focus(onX: rect.x + rect.width, y: rect.y + rect.height) }
         }
     }
 
@@ -301,25 +301,25 @@ struct CropEditor: View {
 
     private var controls: some View {
         VStack(alignment: .leading, spacing: Space.l) {
-            SectionLabel(text: "Обрезать, пиксели")
+            SectionLabel(text: "Cut off, in pixels")
             Grid(alignment: .leading, horizontalSpacing: Space.m, verticalSpacing: Space.s) {
                 GridRow {
-                    MarginField(title: "Слева", value: marginBinding(\.left))
-                    MarginField(title: "Справа", value: marginBinding(\.right))
+                    MarginField(title: "Left", value: marginBinding(\.left))
+                    MarginField(title: "Right", value: marginBinding(\.right))
                 }
                 GridRow {
-                    MarginField(title: "Сверху", value: marginBinding(\.top))
-                    MarginField(title: "Снизу", value: marginBinding(\.bottom))
+                    MarginField(title: "Top", value: marginBinding(\.top))
+                    MarginField(title: "Bottom", value: marginBinding(\.bottom))
                 }
             }
-            Text("Перетаскивайте рамку, её края или углы. За пределами рамки перемещается изображение. Жестом или лупой можно увеличить масштаб до отдельных пикселей.")
+            Text("Drag the frame's edges or corners, or the frame itself; drag outside it to move the picture. Pinch or the magnifiers zoom; close up, every pixel shows.")
                 .zfont(11).foregroundStyle(Theme.muted).fixedSize(horizontal: false, vertical: true)
             VStack(alignment: .leading, spacing: Space.s) {
-                GlassButton(title: "Найти однотонные края", symbol: "wand.and.rays") { Task { await detect() } }.disabled(detecting)
-                GlassButton(title: "Без обрезки", symbol: "arrow.uturn.backward") { rect = full; note = "Изображение сохранится целиком." }
+                GlassButton(title: "Find plain borders", symbol: "wand.and.rays") { Task { await detect() } }.disabled(detecting)
+                GlassButton(title: "No crop", symbol: "arrow.uturn.backward") { rect = full; note = "The whole picture is kept." }
             }
             if source.edit != nil {
-                LinkText(text: "Отменить все изменения и вернуть оригинал", color: Theme.danger, size: 12) { library.applyEdit(target, nil) }
+                LinkText(text: "Undo all edits (back to the original)", color: Theme.danger, size: 12) { library.applyEdit(target, nil) }
             }
             Spacer(minLength: 0)
         }

@@ -19,19 +19,19 @@ struct TagsView: View {
 
     var body: some View {
         PageColumn {
-            PageHeader(title: "Теги", subtitle: plural(visible.count, "tag")) {
-                MBToggle(isOn: $includeDeleted, label: "Включая удалённые")
-                    .help("Учитывать теги удалённых публикаций")
-                SteadyTextField(text: $filter, placeholder: "Фильтр тегов", size: 12)
+            PageHeader(title: "Tags", subtitle: plural(visible.count, "tag")) {
+                MBToggle(isOn: $includeDeleted, label: "Include deleted")
+                    .help("Count uses on deleted posts, and show tags that only exist on deleted posts")
+                SteadyTextField(text: $filter, placeholder: "Filter tags", size: 12)
                     .fieldChrome().frame(width: 200)
             }
             if visible.isEmpty {
-                EmptyState(icon: "tag", title: filter.isEmpty ? "Тегов пока нет" : "Подходящих тегов нет",
-                           subtitle: filter.isEmpty ? "Теги появятся здесь после добавления к публикациям." : "Нет совпадений с «\(filter)».")
+                EmptyState(icon: "tag", title: filter.isEmpty ? "No tags yet" : "No matching tags",
+                           subtitle: filter.isEmpty ? "Tags appear here once posts are tagged." : "Nothing matches “\(filter)”.")
             } else {
                 Grid(alignment: .leading, horizontalSpacing: Space.xl, verticalSpacing: 0) {
                     GridRow {
-                        head("Тег"); head("Коллекция"); head("Тип"); head("Алиасы").frame(maxWidth: .infinity, alignment: .leading)
+                        head("Tag"); head("Posts"); head("Kind"); head("Aliases").frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .padding(.bottom, Space.s)
                     GridRow { Rule().gridCellColumns(4) }
@@ -40,7 +40,7 @@ struct TagsView: View {
                             LinkText(text: r.tag.name, color: Theme.tagColor(r.tag.kind), size: 13, weight: .bold) { library.search(tag: r.tag.name) }
                             Text("\(count(r))").zfont(12).monospacedDigit().foregroundStyle(r.isDead ? Theme.danger : Theme.text)
                             LinkText(text: Theme.kindName(r.tag.kind), color: Theme.muted, size: 12) { library.setTagKind(r.tag, r.tag.kind == .meta ? .normal : .meta) }
-                                .help("Нажмите для переключения между обычным тегом и метатегом")
+                                .help("Click to switch between General and Meta")
                             aliases(r).frame(maxWidth: .infinity, alignment: .leading)   // last column takes the slack
                         }
                         .padding(.vertical, Space.s)

@@ -1,23 +1,23 @@
 <!doctype html>
-<html lang="ru">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="theme-color" content="#53655b" />
     <meta
       name="description"
-      content="Memebooru — коллекция обоев Frutiger Aero с тегами и поиском."
+      content="Memebooru — a tagged, searchable Frutiger Aero wallpaper collection."
     />
     <title>Memebooru · Frutiger Aero</title>
     <link rel="stylesheet" href="style.css" />
     <script type="module" src="app.js"></script>
   </head>
   <body>
-    <a class="skip" href="#gallery">К изображениям</a>
+    <a class="skip" href="#gallery">Skip to pictures</a>
     <header class="app-header">
       <button
         id="filters-toggle"
-        aria-label="Открыть боковую панель"
+        aria-label="Open sidebar"
         aria-expanded="false"
         aria-controls="filters"
       >
@@ -30,87 +30,83 @@
         ></a
       >
       <form id="search-form" role="search">
-        <label class="sr-only" for="search">Поиск по названию и тегам</label>
+        <label class="sr-only" for="search">Search titles and tags</label>
         <input
           id="search"
           type="search"
-          placeholder='теги, "текст", -исключение'
+          placeholder='tags, "text", -exclude'
           autocomplete="off"
         />
-        <button type="submit">Поиск</button>
+        <button type="submit">Search</button>
       </form>
       <span class="header-collection"
         >Frutiger Aero Archive <span aria-hidden="true">›</span></span
       >
     </header>
     <div class="layout">
-      <button
-        id="drawer-shade"
-        hidden
-        aria-label="Закрыть боковую панель"
-      ></button>
-      <aside id="filters" aria-label="Просмотр коллекции">
+      <button id="drawer-shade" hidden aria-label="Close sidebar"></button>
+      <aside id="filters" aria-label="Browse collection">
         <section>
-          <h2>Просмотр</h2>
+          <h2>Browse</h2>
           <button id="collection" class="nav-row" aria-pressed="true">
-            <span aria-hidden="true">▧</span> Коллекция
+            <span aria-hidden="true">▧</span> Collection
           </button>
           <button id="favorites" class="nav-row" aria-pressed="false">
-            <span aria-hidden="true">♡</span> Избранное
+            <span aria-hidden="true">♡</span> Favorites
             <small id="fav-count">0</small>
           </button>
         </section>
         <section>
-          <h2>Категория</h2>
+          <h2>Category</h2>
           <button id="pictures" class="category-row">
-            Изображения <small id="picture-count"></small>
+            Pictures <small id="picture-count"></small>
           </button>
         </section>
         <section>
-          <h2>Популярные теги <span id="tag-count"></span></h2>
-          <label class="sr-only" for="tag-search">Найти тег</label>
-          <input id="tag-search" type="search" placeholder="Найти тег…" />
+          <h2>Popular tags <span id="tag-count"></span></h2>
+          <label class="sr-only" for="tag-search">Find a tag</label>
+          <input id="tag-search" type="search" placeholder="Find a tag…" />
           <div id="tag-list"></div>
         </section>
         <details class="filter-options">
-          <summary>Фильтры</summary>
-          <label for="category">Раздел архива</label
+          <summary>Filters</summary>
+          <label for="category">Archive section</label
           ><select id="category">
-            <option value="">Все разделы</option>
+            <option value="">All sections</option>
           </select>
-          <label for="orientation">Ориентация</label
+          <label for="orientation">Orientation</label
           ><select id="orientation">
-            <option value="">Любая</option>
-            <option value="landscape">Горизонтальная</option>
-            <option value="portrait">Вертикальная</option>
-            <option value="square">Квадратная</option>
+            <option value="">Any</option>
+            <option value="landscape">Landscape</option>
+            <option value="portrait">Portrait</option>
+            <option value="square">Square</option>
           </select>
-          <label for="resolution">Минимальная ширина</label
+          <label for="resolution">Minimum width</label
           ><select id="resolution">
-            <option value="0">Любая</option>
-            <option value="1920">1920 пикс. · Full HD</option>
-            <option value="2560">2560 пикс. · QHD</option>
-            <option value="3840">3840 пикс. · 4K</option>
+            <option value="0">Any</option>
+            <option value="1920">1920 px · Full HD</option>
+            <option value="2560">2560 px · QHD</option>
+            <option value="3840">3840 px · 4K</option>
           </select>
-          <label for="sort">Порядок</label
+          <label for="sort">Order</label
           ><select id="sort">
-            <option value="source">В архиве</option>
-            <option value="resolution">Разрешение ↓</option>
-            <option value="name">Название</option>
+            <option value="source">Archive order</option>
+            <option value="resolution">Resolution ↓</option>
+            <option value="name">Name</option>
           </select>
         </details>
-        <p id="collection-count" class="collection-pill">Загружаем каталог…</p>
+        <p id="collection-count" class="collection-pill">Loading catalogue…</p>
         <p class="attribution">
           <a
             href="https://frutigeraeroarchive.org/wallpapers"
             target="_blank"
             rel="noopener noreferrer"
-            >Источник изображений ↗</a
-          ><br />Права на изображения остаются у авторов.<br /><a
+            >Image source ↗</a
+          ><br />Images remain the property of their respective owners.<br /><a
             href="https://github.com/MrMacduckinson/Memebooru"
             target="_blank"
             rel="noopener noreferrer"
-            >Код · BSD-2-Clause ↗</a
+            >Code · BSD-2-Clause ↗</a
           >
         </p>
       </aside>
@@ -118,25 +114,25 @@
         <main id="gallery" tabindex="-1">
           <div class="page-header">
             <div class="title-row">
-              <h1 id="page-title">Коллекция</h1>
+              <h1 id="page-title">Collection</h1>
               <p id="results" role="status" aria-live="polite">
-                Открываем коллекцию…
+                Opening collection…
               </p>
             </div>
-            <button id="reset">Очистить поиск</button>
+            <button id="reset">Clear search</button>
           </div>
           <div id="selected-tags"></div>
           <div id="grid" class="grid"></div>
           <div id="empty" hidden>
-            <h2>Ничего не найдено</h2>
-            <p>Попробуйте другие теги или сократите запрос.</p>
+            <h2>Nothing found</h2>
+            <p>Try different tags or a shorter query.</p>
           </div>
-          <nav id="pagination" aria-label="Загрузка изображений">
-            <button id="load-more">Показать ещё</button
+          <nav id="pagination" aria-label="Load images">
+            <button id="load-more">Load more</button
             ><span id="page-label"></span>
           </nav>
           <noscript
-            >Для поиска и просмотра каталога включите JavaScript.</noscript
+            >Enable JavaScript to search and browse the collection.</noscript
           >
         </main>
         <section
@@ -145,57 +141,58 @@
           aria-labelledby="detail-title"
           tabindex="-1"
         >
-          <nav class="breadcrumb" aria-label="Навигация по коллекции">
-            <button id="close">‹ Коллекция</button><span>/</span
-            ><button id="detail-category">Изображения</button>
+          <nav class="breadcrumb" aria-label="Collection navigation">
+            <button id="close">‹ Collection</button><span>/</span
+            ><button id="detail-category">Pictures</button>
           </nav>
           <div class="detail-columns">
             <div class="detail-main">
-              <div class="media-stage"><img id="full-image" alt="" /></div>
+              <div class="media-stage">
+                <img id="full-image" alt="" hidden />
+                <p id="image-status" role="status">Loading image…</p>
+              </div>
               <div class="post-heading">
                 <span class="kind-tile" aria-hidden="true">▧</span>
                 <div>
                   <h1 id="detail-title"></h1>
                   <p>
-                    в категории
+                    in
                     <button id="image-category" class="text-link">
-                      Изображения
+                      Pictures
                     </button>
                   </p>
                 </div>
               </div>
               <section class="section-block">
-                <h2>Теги</h2>
+                <h2>Tags</h2>
                 <div class="tag-row">
-                  <span>Обычные</span>
+                  <span>General</span>
                   <div id="detail-tags" class="chips"></div>
                 </div>
-                <p class="tag-note">
-                  Автоматическая разметка; сюжетные теги могут быть неточными.
-                </p>
+                <p class="tag-note">Automatic tags may contain mistakes.</p>
               </section>
             </div>
             <div class="detail-side">
               <section class="section-block">
-                <h2>Ещё из коллекции</h2>
+                <h2>More from this collection</h2>
                 <div class="detail-nav">
-                  <button id="detail-prev" aria-label="Предыдущее изображение">
-                    ← Назад</button
+                  <button id="detail-prev" aria-label="Previous image">
+                    ← Back</button
                   ><span id="detail-position"></span
-                  ><button id="detail-next" aria-label="Следующее изображение">
-                    Далее →
+                  ><button id="detail-next" aria-label="Next image">
+                    Next →
                   </button>
                 </div>
               </section>
               <div class="detail-actions">
-                <button id="favorite-detail">♡ В избранное</button
-                ><a id="download" download>↓ Скачать оригинал</a
+                <button id="favorite-detail">♡ Add to favorites</button
+                ><a id="download" download>↓ Download original</a
                 ><a id="source" target="_blank" rel="noopener noreferrer"
-                  >↗ Страница источника</a
+                  >↗ Source page</a
                 >
               </div>
               <section class="section-block">
-                <h2>Подробности</h2>
+                <h2>Details</h2>
                 <dl id="detail-meta"></dl>
               </section>
             </div>

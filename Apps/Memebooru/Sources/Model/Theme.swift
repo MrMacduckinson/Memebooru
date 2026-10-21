@@ -23,7 +23,7 @@ enum Theme {
     static let headerLine   = Color(hex: 0x40504B)
     static let headerText   = Color(hex: 0xEAF2EE)
     static let headerMuted  = Color(hex: 0x9EB1A3)
-    static let headerAccent = Color(hex: 0xBDD023)   // "Открытая коллекция изображений" yellow-green
+    static let headerAccent = Color(hex: 0xBDD023)   // "Join deviantART for FREE" yellow-green
     static let menu         = Color(hex: 0x3C4441)   // dropdown panels hanging off the header
 
     // Ink
@@ -55,7 +55,7 @@ enum Theme {
     static let tweetBackground = paper
 
     static func tagColor(_ kind: TagKind) -> Color { kind == .meta ? meta : general }
-    static func kindName(_ kind: TagKind) -> String { kind == .meta ? "Мета" : "Обычные" }
+    static func kindName(_ kind: TagKind) -> String { kind == .meta ? "Meta" : "General" }
 
     // MARK: Type (Verdana body, Trebuchet display — the 2011 site's own families)
     static let bodyFamily = "Verdana"
@@ -91,13 +91,7 @@ enum Space {
 }
 
 /// "1 group", "3 groups".
-func plural(_ n: Int, _ word: String) -> String {
-    let forms = ["tag": ["тег", "тега", "тегов"], "action": ["действие", "действия", "действий"],
-                 "group": ["группа", "группы", "групп"], "crop": ["фрагмент", "фрагмента", "фрагментов"]]
-    guard let words = forms[word] else { return "\(n) \(word)" }
-    let index = (11...14).contains(n % 100) ? 2 : n % 10 == 1 ? 0 : (2...4).contains(n % 10) ? 1 : 2
-    return "\(n) \(words[index])"
-}
+func plural(_ n: Int, _ word: String) -> String { "\(n) \(word)\(n == 1 ? "" : "s")" }
 
 extension Color {
     init(hex: UInt32) {
@@ -189,7 +183,7 @@ struct LinkText: View {
     }
 }
 
-/// Section heading ("Просмотр", "Подробности") — bold Tahoma-like, spaced, with the site's white emboss.
+/// Section heading ("Browse", "Details") — bold Tahoma-like, spaced, with the site's white emboss.
 struct SectionLabel: View {
     let text: String
     var body: some View {
@@ -254,7 +248,7 @@ struct PageHeader<Trailing: View>: View {
 }
 
 extension View {
-    /// The one page frame: 24 left/right/top (so the page title lines up with "Просмотр" in the sidebar),
+    /// The one page frame: 24 left/right/top (so the page title lines up with "Browse" in the sidebar),
     /// 32 at the bottom so the last row never sits on the window edge.
     /// On a phone the sides drop to 16, so cards keep their width.
     func pageInsets() -> some View { modifier(PageInsets()) }

@@ -21,14 +21,14 @@ struct MemebooruApp: App {
         .windowStyle(.hiddenTitleBar)
         .commands {
             CommandGroup(after: .newItem) {
-                Button("Добавить файлы…") { library.presentFileImporter = true }.keyboardShortcut("o")
-                Button("Открыть коллекцию…") { library.presentCollectionPicker = true }.keyboardShortcut("o", modifiers: [.command, .shift])
+                Button("Add Files…") { library.presentFileImporter = true }.keyboardShortcut("o")
+                Button("Open Collection…") { library.presentCollectionPicker = true }.keyboardShortcut("o", modifiers: [.command, .shift])
             }
             CommandGroup(after: .sidebar) {
-                Button("Увеличить") { library.zoomIn() }.keyboardShortcut("+", modifiers: .command)
-                Button("Увеличить") { library.zoomIn() }.keyboardShortcut("=", modifiers: .command)
-                Button("Уменьшить") { library.zoomOut() }.keyboardShortcut("-", modifiers: .command)
-                Button("Исходный размер") { library.zoomReset() }.keyboardShortcut("0", modifiers: .command)
+                Button("Zoom In") { library.zoomIn() }.keyboardShortcut("+", modifiers: .command)
+                Button("Zoom In") { library.zoomIn() }.keyboardShortcut("=", modifiers: .command)
+                Button("Zoom Out") { library.zoomOut() }.keyboardShortcut("-", modifiers: .command)
+                Button("Actual Size") { library.zoomReset() }.keyboardShortcut("0", modifiers: .command)
             }
         }
         #endif

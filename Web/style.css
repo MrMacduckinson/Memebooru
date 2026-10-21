@@ -9,7 +9,7 @@
   --hover: #196ba7;
   --rule: #bfcdbd;
   --border: #a6b2a6;
-  --header-height: 42px;
+  --header-height: 64px;
   --sidebar-width: 208px;
 }
 * {
@@ -90,7 +90,7 @@ select {
   display: flex;
   align-items: center;
   gap: 24px;
-  padding: 0 16px;
+  padding: 0 24px;
   background: linear-gradient(#53655b, #738678);
   border-bottom: 1px solid #40504b;
   box-shadow: 0 1px #f2fcf1b3;
@@ -136,7 +136,7 @@ select {
 #search-form {
   display: flex;
   width: 300px;
-  height: 24px;
+  height: 32px;
   flex-shrink: 0;
   border: 1px solid #2b3432;
   border-radius: 5px;
@@ -618,7 +618,7 @@ h1 {
 }
 @media (max-width: 760px) {
   :root {
-    --header-height: 86px;
+    --header-height: 102px;
   }
   .app-header {
     display: grid;
@@ -712,4 +712,22 @@ h1 {
 }
 #tag-list button small {
   flex-shrink: 0;
+}
+
+#gallery:focus-visible,
+#detail:focus-visible {
+  outline: none;
+}
+#image-status {
+  min-height: 240px;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  margin: 0;
+  text-align: center;
+}
+@media (max-width: 360px) {
+  .edition {
+    display: none;
+  }
 }

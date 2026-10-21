@@ -29,7 +29,7 @@ import MemebooruCore
         #expect(!f.library.stagingSelecting && f.library.stagingSelection.isEmpty)
         #expect(c.info.width == 40 && c.info.height == 160)
         #expect(f.library.stagedItems.count == 2)                                // the combined one and the text
-        #expect(f.library.lastUndoLabel == "Объединено изображений: 2")
+        #expect(f.library.lastUndoLabel == "Combined 2 pictures")
     }
 
     @Test func relayoutAndSplitAStagedOne() async throws {

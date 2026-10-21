@@ -340,7 +340,7 @@ extension Stage {
 }
 
 struct Search: ParsableCommand {
-    static let configuration = CommandConfiguration(abstract: "Search: memebooru search 2022 stalin -ussr \"обед\"")
+    static let configuration = CommandConfiguration(abstract: "Search: memebooru search 2022 stalin -ussr \"lunch\"")
     @OptionGroup var collection: CollectionOption
     // Captured verbatim from the first query word on, so negations like `-ussr` are query, not options.
     @Argument(parsing: .captureForPassthrough,

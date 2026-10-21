@@ -1,17 +1,16 @@
-# Коллекция Frutiger Aero Archive
+# Frutiger Aero Archive collection
 
-Выбрано 38 разделов: 6 069 URL оригиналов, 6 002 уникальных SHA-256. Совпадающие файлы объединяются при импорте и экспорте; манифест сохраняет все исходные ссылки. Суммарный размер файлов по URL — 11 721 527 754 байта.
+38 selected sections: 6,069 original URLs and 6,002 unique SHA-256 hashes. Exact duplicates merge on import/export; the manifest preserves every source URL. Total size counted by URL: 11,721,527,754 bytes.
 
-Теги: 6–16 на файл, медиана 10. Сюжет и стиль предложены OpenCLIP; цвета и геометрия вычислены из изображения. Визуально проверены и исправлены 58 уникальных изображений (66 записей с учётом повторов): выборка Asadal и примеры из всех групп изображений. Остальные сюжетные теги автоматически предложены и могут ошибаться. Поле `tagging.reviewed` отличает проверенную выборку.
+Each file has 6–16 English tags (median 10). OpenCLIP proposed subjects and styles; colors and dimensions were measured. 58 unique images (66 records including duplicates) were visually reviewed and corrected: an Asadal sample and examples from every image group. Other semantic tags remain automatic suggestions and may be wrong. `tagging.reviewed` identifies reviewed entries. Translating tags into English did not rerun or strengthen visual review.
 
-Один оригинал, `graphics_77.jpg`, имеет неполное окончание JPEG уже на стороне источника. Исходные байты сохранены, для разметки использовано мягкое декодирование; запись помечена `decodingWarning`.
+`graphics_77.jpg` has an incomplete JPEG ending at the source. Original bytes are preserved; tolerant decoding was used only for tagging, with a `decodingWarning` marker.
 
-Для трёх других файлов (`asadal_stock_447.jpg`, `miscellaneous_128.jpg`, `miscellaneous_186.jpg`) встроенный Linux-декодер не создаёт превью. Установленный FFmpeg обрабатывает их через резервный путь приложения. Это требование подготовки коллекции; готовая веб-галерея состоит только из статических файлов.
+Three other files (`asadal_stock_447.jpg`, `miscellaneous_128.jpg`, `miscellaneous_186.jpg`) require the existing FFmpeg fallback to generate previews on Linux. FFmpeg is needed when preparing the collection, not when serving the finished static gallery.
 
-Оригиналы не входят в Git и не распространяются под лицензией кода. Скачивание с проверкой SHA-256: команда из основного README с `--manifest Collections/frutiger-aero.json`.
+Originals are not included in Git and are not covered by the code license. Download and verify SHA-256 using the README command with `--manifest Collections/frutiger-aero.json`.
 
-
-| Раздел | Файлов |
+| Section | Files |
 |---|---:|
 | [Asadal Design Wallpapers Vol. 1](https://frutigeraeroarchive.org/wallpapers) | 215 |
 | [Acer OEM Wallpapers](https://frutigeraeroarchive.org/wallpapers/acer) | 93 |

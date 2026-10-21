@@ -1,5 +1,5 @@
 export function tokens(query) {
-  return (query.toLocaleLowerCase("ru").match(/-?"[^"]*"|\S+/g) || [])
+  return (query.toLocaleLowerCase("en").match(/-?"[^"]*"|\S+/g) || [])
     .map((s) => ({
       exclude: s.startsWith("-"),
       value: s.replace(/^-/, "").replaceAll('"', ""),
@@ -9,7 +9,7 @@ export function tokens(query) {
 export function matches(item, state) {
   const hay = [item.title, item.category, ...item.tags]
     .join(" ")
-    .toLocaleLowerCase("ru");
+    .toLocaleLowerCase("en");
   return (
     (!state.category || item.category === state.category) &&
     (!state.orientation ||
@@ -110,8 +110,8 @@ if (typeof document !== "undefined") {
   function updateFavorite(item) {
     const saved = state.favorites.has(item.sha256);
     $("favorite-detail").textContent = saved
-      ? "♥ В избранном"
-      : "♡ В избранное";
+      ? "♥ In favorites"
+      : "♡ Add to favorites";
     $("favorite-detail").setAttribute("aria-pressed", String(saved));
   }
   function toggleTag(tag) {
@@ -126,11 +126,11 @@ if (typeof document !== "undefined") {
     const counts = new Map();
     for (const item of items)
       for (const tag of item.tags) counts.set(tag, (counts.get(tag) || 0) + 1);
-    const query = $("tag-search").value.toLocaleLowerCase("ru");
+    const query = $("tag-search").value.toLocaleLowerCase("en");
     $("tag-count").textContent = counts.size;
     $("tag-list").replaceChildren(
       ...[...counts]
-        .filter(([tag]) => tag.toLocaleLowerCase("ru").includes(query))
+        .filter(([tag]) => tag.toLocaleLowerCase("en").includes(query))
         .sort((a, b) => b[1] - a[1])
         .slice(0, query ? 100 : 16)
         .map(([tag, n]) => {
@@ -146,18 +146,18 @@ if (typeof document !== "undefined") {
     if (state.sort === "resolution")
       filtered.sort((a, b) => b.width * b.height - a.width * a.height);
     else if (state.sort === "name")
-      filtered.sort((a, b) => a.title.localeCompare(b.title, "ru"));
+      filtered.sort((a, b) => a.title.localeCompare(b.title, "en"));
     const pages = Math.max(1, Math.ceil(filtered.length / PAGE));
     state.page = Math.min(state.page, pages);
     $("page-title").textContent = state.onlyFavorites
-      ? "Избранное"
+      ? "Favorites"
       : state.query ||
           state.tags.size ||
           state.category ||
           state.orientation ||
           state.resolution
-        ? "Поиск"
-        : "Коллекция";
+        ? "Search"
+        : "Collection";
     $("reset").hidden = !(
       state.query ||
       state.tags.size ||
@@ -167,7 +167,7 @@ if (typeof document !== "undefined") {
     );
     $("collection").setAttribute("aria-pressed", String(!state.onlyFavorites));
     $("results").textContent =
-      `Найдено: ${filtered.length.toLocaleString("ru")} из ${items.length.toLocaleString("ru")}`;
+      `Found: ${filtered.length.toLocaleString("en")} of ${items.length.toLocaleString("en")}`;
     $("fav-count").textContent = state.favorites.size;
     $("favorites").setAttribute("aria-pressed", String(state.onlyFavorites));
     $("selected-tags").replaceChildren(
@@ -178,7 +178,7 @@ if (typeof document !== "undefined") {
       .map((item) => {
         const card = element("article", undefined, "card");
         const open = button("", () => show(item.sha256), "card-open");
-        open.setAttribute("aria-label", "Открыть: " + item.title);
+        open.setAttribute("aria-label", "Open: " + item.title);
         const img = element("img");
         img.src = item.thumb;
         img.alt = item.title;
@@ -195,8 +195,8 @@ if (typeof document !== "undefined") {
         );
         const meta = element("div", undefined, "meta");
         meta.append(
-          element("span", "в "),
-          document.createTextNode("Изображения"),
+          element("span", "in "),
+          document.createTextNode("Pictures"),
         );
         text.append(meta);
         open.append(text);
@@ -208,7 +208,7 @@ if (typeof document !== "undefined") {
     $("empty").hidden = filtered.length > 0;
     $("pagination").hidden = filtered.length === 0;
     $("page-label").textContent =
-      `${Math.min(state.page * PAGE, filtered.length)} из ${filtered.length}`;
+      `${Math.min(state.page * PAGE, filtered.length)} of ${filtered.length}`;
     $("load-more").hidden = state.page >= pages;
     renderTags();
     const params = new URLSearchParams();
@@ -230,20 +230,40 @@ if (typeof document !== "undefined") {
     current = filtered.findIndex((x) => x.sha256 === id);
     if (current < 0) return;
     const item = filtered[current];
-    $("full-image").src = item.file;
-    $("full-image").alt = item.title;
+    if ($("full-image").dataset.sha256 !== item.sha256) {
+      const image = element("img");
+      image.id = "full-image";
+      image.alt = item.title;
+      image.dataset.sha256 = item.sha256;
+      image.hidden = true;
+      const status = $("image-status");
+      status.textContent = "Loading image…";
+      status.hidden = false;
+      image.onload = () => {
+        if ($("full-image") !== image) return;
+        image.hidden = false;
+        status.hidden = true;
+      };
+      image.onerror = () => {
+        if ($("full-image") !== image) return;
+        status.textContent =
+          "Could not load this image. Try downloading the original.";
+      };
+      $("full-image").replaceWith(image);
+      image.src = item.file;
+    }
     $("detail-title").textContent =
       item.tags.slice(0, 4).join(" ") || item.title;
     $("detail-meta").replaceChildren(
       ...[
-        ["Файл", item.title],
-        ["Раздел", item.category.replaceAll("_", " ")],
-        ["Разрешение", `${item.width} × ${item.height}`],
+        ["File", item.title],
+        ["Section", item.category.replaceAll("_", " ")],
+        ["Resolution", `${item.width} × ${item.height}`],
         [
-          "Размер файла",
-          `${(item.bytes / 1048576).toLocaleString("ru", { maximumFractionDigits: 2 })} МБ`,
+          "File size",
+          `${(item.bytes / 1048576).toLocaleString("en", { maximumFractionDigits: 2 })} MB`,
         ],
-        ["Формат", item.file.split(".").pop().toUpperCase()],
+        ["Format", item.file.split(".").pop().toUpperCase()],
         ["SHA-256", item.sha256.slice(0, 12) + "…"],
       ].flatMap(([key, value]) => [
         element("dt", key + ":"),
@@ -427,9 +447,9 @@ if (typeof document !== "undefined") {
       o.value = cat;
       $("category").append(o);
     }
-    $("picture-count").textContent = items.length.toLocaleString("ru");
+    $("picture-count").textContent = items.length.toLocaleString("en");
     $("collection-count").textContent =
-      `Aero Archive · публикаций: ${items.length.toLocaleString("ru")}`;
+      `Aero Archive · posts: ${items.length.toLocaleString("en")}`;
     const p = new URLSearchParams(location.search);
     state.query = p.get("q") || "";
     state.category = p.get("category") || "";
@@ -446,8 +466,8 @@ if (typeof document !== "undefined") {
     if (location.hash) show(location.hash.slice(1));
   } catch (error) {
     $("results").textContent =
-      "Не удалось загрузить каталог. Обновите страницу или попробуйте позже.";
-    $("collection-count").textContent = "Каталог недоступен";
+      "Could not load the catalogue. Refresh the page or try again later.";
+    $("collection-count").textContent = "Catalogue unavailable";
     console.error("Gallery could not load:", error.message);
   }
 }

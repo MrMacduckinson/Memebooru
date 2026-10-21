@@ -27,7 +27,7 @@ final class SyncController {
             Task { @MainActor in
                 guard let self else { return }
                 switch r {
-                case .success(let rep): self.note("↔ \(rep.peerName): \(rep.received) получено / \(rep.sent) отправлено, медиа ↓\(rep.mediaReceived) ↑\(rep.mediaSent)\(rep.paired ? " — подключено" : "")")
+                case .success(let rep): self.note("↔ \(rep.peerName): \(rep.received) in / \(rep.sent) out, media ↓\(rep.mediaReceived) ↑\(rep.mediaSent)\(rep.paired ? " — paired" : "")")
                 case .failure(let e): self.note("✗ \(e)")
                 }
                 self.refresh()
@@ -64,7 +64,7 @@ final class SyncController {
                 switch result {
                 case .success(let r):
                     try? c.peers.setEndpoint(id: r.peerID, "bonjour:\(found.name)")
-                    self.note("↔ \(r.peerName): \(r.received) получено / \(r.sent) отправлено, медиа ↓\(r.mediaReceived) ↑\(r.mediaSent)\(r.paired ? " — подключено" : "")")
+                    self.note("↔ \(r.peerName): \(r.received) in / \(r.sent) out, media ↓\(r.mediaReceived) ↑\(r.mediaSent)\(r.paired ? " — paired" : "")")
                 case .failure(let e): self.note("✗ \(found.name): \(e)")
                 }
                 self.busyWith = nil; self.refresh(); done()
@@ -78,7 +78,7 @@ final class SyncController {
         if let ep = peer.endpoint, ep.hasPrefix("tcp:"), let (host, port) = Self.hostPort(String(ep.dropFirst(4))) {
             sync(host: host, port: port, code: nil, then: done); return
         }
-        note("✗ \(peer.name) недоступно: устройство не рядом, адрес не указан")
+        note("✗ \(peer.name) is not reachable (not nearby, no address)")
     }
 
     func sync(host: String, port: UInt16, code: String?, then done: @escaping @MainActor () -> Void) {
@@ -90,7 +90,7 @@ final class SyncController {
                 switch result {
                 case .success(let r):
                     try? c.peers.setEndpoint(id: r.peerID, "tcp:\(host):\(port)")
-                    self.note("↔ \(r.peerName): \(r.received) получено / \(r.sent) отправлено, медиа ↓\(r.mediaReceived) ↑\(r.mediaSent)\(r.paired ? " — подключено" : "")")
+                    self.note("↔ \(r.peerName): \(r.received) in / \(r.sent) out, media ↓\(r.mediaReceived) ↑\(r.mediaSent)\(r.paired ? " — paired" : "")")
                 case .failure(let e): self.note("✗ \(host):\(port): \(e)")
                 }
                 self.busyWith = nil; self.refresh(); done()

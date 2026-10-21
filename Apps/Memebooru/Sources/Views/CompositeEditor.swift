@@ -23,11 +23,11 @@ struct CompositeEditor: View {
         let stack = compact ? AnyLayout(VStackLayout(spacing: Space.l)) : AnyLayout(HStackLayout(alignment: .top, spacing: Space.xl))
         VStack(alignment: .leading, spacing: Space.l) {
             HStack(alignment: .firstTextBaseline) {
-                Text(isNew ? "Объединить изображения: \(parts.count)" : "Коллаж из \(parts.count) изображений").dfont(22).foregroundStyle(Theme.text)
+                Text(isNew ? "Combine \(parts.count) pictures" : "Layout of \(parts.count) pictures").dfont(22).foregroundStyle(Theme.text)
                 Spacer()
                 if ready {
                     let g = layout.geometry(for: ordered)
-                    Text("Результат: \(g.width) × \(g.height)").zfont(12).foregroundStyle(Theme.muted).monospacedDigit()
+                    Text("Result: \(g.width) × \(g.height)").zfont(12).foregroundStyle(Theme.muted).monospacedDigit()
                 }
             }
             Rule()
@@ -41,8 +41,8 @@ struct CompositeEditor: View {
             }
             HStack {
                 Spacer()
-                GlassButton(title: "Отмена") { dismiss() }.keyboardShortcut(.cancelAction)
-                GlassButton(title: isNew ? "Объединить" : "Сохранить коллаж", symbol: "checkmark", prominent: true) {
+                GlassButton(title: "Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
+                GlassButton(title: isNew ? "Combine" : "Save layout", symbol: "checkmark", prominent: true) {
                     library.applyComposite(target, layout: layout, order: order)
                 }
                 .keyboardShortcut(.defaultAction)
@@ -97,13 +97,13 @@ struct CompositeEditor: View {
 
     private var controls: some View {
         VStack(alignment: .leading, spacing: Space.l) {
-            SectionLabel(text: "Расположение")
+            SectionLabel(text: "Arrangement")
             LazyVGrid(columns: [GridItem(.flexible(), spacing: Space.s), GridItem(.flexible(), spacing: Space.s)], spacing: Space.s) {
                 ForEach(arrangements, id: \.self) { a in ArrangementTile(arrangement: a, on: layout.arrangement == a) { set(a) } }
             }
             if layout.arrangement == .grid {
                 HStack {
-                    Text("Изображений в ряду").zfont(12).foregroundStyle(Theme.text)
+                    Text("Pictures per row").zfont(12).foregroundStyle(Theme.text)
                     Spacer()
                     Stepper(value: Binding(get: { layout.columns }, set: { layout.columns = $0; layout.size = nil }),
                             in: 1...max(1, parts.count - 1)) {
@@ -119,7 +119,7 @@ struct CompositeEditor: View {
                 HStack {
                     Text(sizeTitle).zfont(12).foregroundStyle(Theme.text)
                     Spacer()
-                    Text(layout.size == nil || current == range.upperBound ? "\(current) пикс. (максимум)" : "\(current) px")
+                    Text(layout.size == nil || current == range.upperBound ? "\(current) px (largest)" : "\(current) px")
                         .zfont(12).foregroundStyle(Theme.muted).monospacedDigit()
                 }
                 MBSlider(value: Binding(get: { current }, set: { layout.size = $0 >= range.upperBound ? nil : $0 }), range: range)
@@ -128,14 +128,14 @@ struct CompositeEditor: View {
 
             VStack(alignment: .leading, spacing: Space.xs) {
                 HStack {
-                    Text("Интервал").zfont(12).foregroundStyle(Theme.text)
+                    Text("Space between").zfont(12).foregroundStyle(Theme.text)
                     Spacer()
                     Text("\(layout.gap) px").zfont(12).foregroundStyle(Theme.muted).monospacedDigit()
                 }
                 MBSlider(value: $layout.gap, range: 0...48)
             }
 
-            SectionLabel(text: "Порядок")
+            SectionLabel(text: "Order")
             orderStrip
             Spacer(minLength: 0)
         }
@@ -153,15 +153,15 @@ struct CompositeEditor: View {
     }
 
     private var sizeTitle: String {
-        switch layout.arrangement { case .row, .feature: "Высота"; case .column, .grid: "Ширина" }
+        switch layout.arrangement { case .row, .feature: "Height"; case .column, .grid: "Width" }
     }
 
     private var sizeHint: String {
         switch layout.arrangement {
-        case .row: "Единая высота изображений, не больше высоты самого крупного."
-        case .column: "Единая ширина изображений, не больше ширины самого крупного."
-        case .grid: "Каждый ряд заполняет эту ширину."
-        case .feature: "Высота первого изображения. Остальные располагаются колонкой рядом."
+        case .row: "All pictures get this height; the largest sets the most it can be."
+        case .column: "All pictures get this width; the largest sets the most it can be."
+        case .grid: "Every row fills this width."
+        case .feature: "The first picture's height; the others stack beside it."
         }
     }
 
@@ -191,7 +191,7 @@ struct CompositeEditor: View {
                 .frame(width: 18, height: 16).contentShape(Rectangle())
         }
         .buttonStyle(.plain).disabled(!enabled).linkPointer()
-        .accessibilityLabel(symbol == "chevron.left" ? "Переместить раньше" : "Переместить позже")
+        .accessibilityLabel(symbol == "chevron.left" ? "Move earlier" : "Move later")
     }
 }
 

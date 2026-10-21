@@ -77,7 +77,7 @@ final class Library {
     var compositeEditor: CompositeTarget?
     /// The crop / trim editor, when open.
     var editTarget: EditTarget?
-    /// Pictures added through "Добавить › Коллаж…" go straight into the combined-picture editor.
+    /// Pictures added through "Add › Combined picture…" go straight into the combined-picture editor.
     var presentCombineImporter = false
     private(set) var duplicateClusters: [DuplicateCluster] = []
     private(set) var tags: [TagRowModel] = []
@@ -107,7 +107,7 @@ final class Library {
     private(set) var previewsInFlight: Set<String> = []
     private(set) var previewsReady = 0
 
-    func cancelActiveImport() { activeTask?.cancel(); busy = "Останавливаем…" }
+    func cancelActiveImport() { activeTask?.cancel(); busy = "Stopping…" }
 
     // navigation
     var selection: MemeID?
@@ -479,9 +479,9 @@ final class Library {
         (try? threadLoader()?.pending(for: id)) ?? (false, false)
     }
 
-    func loadReplyParent(of id: MemeID) { runThread("Загружаем предыдущий твит…") { try await $0.loadReplyParent(of: id) } }
-    func loadReplyChain(of id: MemeID) { runThread("Загружаем цепочку…") { _ = try await $0.loadReplyChain(of: id) } }
-    func loadQuoted(of id: MemeID) { runThread("Загружаем цитируемый твит…") { _ = try await $0.loadQuoted(of: id) } }
+    func loadReplyParent(of id: MemeID) { runThread("Loading previous tweet…") { try await $0.loadReplyParent(of: id) } }
+    func loadReplyChain(of id: MemeID) { runThread("Loading thread…") { _ = try await $0.loadReplyChain(of: id) } }
+    func loadQuoted(of id: MemeID) { runThread("Loading quoted tweet…") { _ = try await $0.loadQuoted(of: id) } }
 
     private func runThread(_ label: String, _ body: @escaping @Sendable (TweetThreadLoader) async throws -> Void) {
         guard let loader = threadLoader() else { return }
@@ -497,7 +497,7 @@ final class Library {
         }
     }
 
-    /// "Добавить отдельно от твита": stage the tweet's photos/videos as plain memes to tag and commit.
+    /// "Add not as a tweet": stage the tweet's photos/videos as plain memes to tag and commit.
     /// Returns the number of media items staged.
     @discardableResult
     func extractTweetMedia(_ id: MemeID) -> Int {
@@ -513,7 +513,7 @@ final class Library {
                                                      extraTags: handle.isEmpty ? [] : ["@\(handle.lowercased())"]) != nil { n += 1 }
             } catch { errorMessage = "\(error)" }
         }
-        if n > 0 { reloadStaging(); section = .staging } else { errorMessage = "В этом твите нет изображения или видео." }
+        if n > 0 { reloadStaging(); section = .staging } else { errorMessage = "This tweet has no image/video to extract." }
         return n
     }
 
@@ -608,13 +608,13 @@ final class Library {
         let clean = stagedItems.filter { duplicates(of: $0).isEmpty }
         guard !clean.isEmpty else { return }
         let converting = clean.filter(\.willConvert).count
-        busy = converting > 0 ? "Конвертируем файлов: \(converting)…" : "Сохраняем…"
+        busy = converting > 0 ? "Converting \(converting) file\(converting == 1 ? "" : "s")…" : "Committing…"
         busyCancellable = true
         let analyzer = analyzer, total = clean.count
         activeTask = Task.detached {
             let result = Result {
                 try c.commitStaged(clean, analyzer: analyzer, onProgress: { n in
-                    if n % 10 == 0 || n == total { Task { @MainActor in self.busy = "Сохраняем \(n) из \(total)…" } }
+                    if n % 10 == 0 || n == total { Task { @MainActor in self.busy = "Committing \(n) of \(total)…" } }
                 }, isCancelled: { Task.isCancelled })
             }
             await MainActor.run {
@@ -635,8 +635,8 @@ final class Library {
     func deleteAllTweets() {
         guard let c = collection else { return }
         let ids = (try? c.search.search("tweet", limit: 100_000).memes.filter { $0.kind == .tweet }.map(\.id)) ?? []
-        guard !ids.isEmpty else { errorMessage = "Нет твитов для удаления."; return }
-        do { lastUndoLabel = try c.deleteMemes(ids, label: "Удалить твиты: \(ids.count)"); reloadAll(); refreshUndo() }
+        guard !ids.isEmpty else { errorMessage = "No tweets to delete."; return }
+        do { lastUndoLabel = try c.deleteMemes(ids, label: "Delete \(ids.count) tweets"); reloadAll(); refreshUndo() }
         catch { errorMessage = "\(error)" }
     }
 
@@ -654,8 +654,8 @@ final class Library {
         loadXSessionIfNeeded()
         guard let c = collection, let staging, let session = xSession else { presentXLogin = true; return }
         guard activeTask == nil else { return }
-        let name = feed == .likes ? "понравившиеся" : "закладки"
-        busy = "Импортируем x.com — \(name)…"
+        let name = feed.rawValue
+        busy = "Importing x.com \(name)…"
         busyCancellable = true
         let http = platform.http
         activeTask = Task.detached { [staging] in
@@ -676,7 +676,7 @@ final class Library {
                 switch result {
                 case .success(let p):
                     if p.staged == 0 && p.skipped == 0 {
-                        self.errorMessage = "x.com вернул пустой список: \(name). Возможно, он закрыт, пуст или срок сеанса истёк."
+                        self.errorMessage = "x.com returned an empty \(name) timeline. Your \(name) may be private or empty, or the session expired."
                     } else {
                         self.notice = xImportSummary(name, p, stopped: false)
                     }
@@ -684,7 +684,7 @@ final class Library {
                     self.notice = xImportSummary(name, last.value ?? .init(), stopped: true)
                 case .failure(let e):
                     let saved = last.value?.staged ?? 0
-                    self.errorMessage = "\(e)" + (saved > 0 ? "\n\nСохранено до остановки: \(saved). Повторите импорт для продолжения." : "")
+                    self.errorMessage = "\(e)" + (saved > 0 ? "\n\n\(saved) saved before it stopped; import again to continue." : "")
                 }
                 self.noticeAction = .staging
             }
@@ -703,16 +703,16 @@ final class Library {
 
     func stage(urls: [URL], then: (@MainActor ([StagedItem]) -> Void)? = nil) {
         guard let staging else { return }
-        busy = "Импортируем…"
+        busy = "Importing…"
         Task.detached { [staging] in
             let report = try? FolderImporter(staging: staging).importFiles(urls)
             await MainActor.run {
                 self.busy = nil
                 self.reloadStaging()
-                if let r = report, !r.skipped.isEmpty { self.errorMessage = "Пропущено файлов: \(r.skipped.count)" }
+                if let r = report, !r.skipped.isEmpty { self.errorMessage = "Skipped \(r.skipped.count) file(s)" }
                 let uncommon = report?.staged.filter { $0.compatibility == .uncommon }.count ?? 0
                 if uncommon > 0 {
-                    self.notice = "Файлов в необычных форматах: \(uncommon). Перед сохранением можно конвертировать их во входящих."
+                    self.notice = "\(uncommon == 1 ? "1 file is" : "\(uncommon) files are") in an uncommon format. Staging suggests converting \(uncommon == 1 ? "it" : "them") to a popular one before adding."
                     self.noticeAction = .staging
                 }
                 self.section = .staging
@@ -727,7 +727,7 @@ final class Library {
 
     func importTweet(_ url: String) {
         guard let staging else { return }
-        busy = "Загружаем твит…"
+        busy = "Fetching tweet…"
         let http = platform.http
         Task.detached { [staging] in
             let importer = TweetImporter(staging: staging, source: FxTwitterSource(http: http), http: http)
@@ -738,7 +738,7 @@ final class Library {
 
     func importTelegramExport(_ dir: URL) {
         guard let staging else { return }
-        busy = "Импортируем архив Telegram…"
+        busy = "Importing Telegram export…"
         Task.detached { [staging] in
             do { _ = try TelegramExportImporter(staging: staging).importExport(at: dir) } catch { await MainActor.run { self.errorMessage = "\(error)" } }
             await MainActor.run { self.busy = nil; self.reloadStaging(); self.section = .staging }
@@ -767,7 +767,7 @@ final class Library {
         guard let staging else { return }
         committing.insert(item.id)
         stagedItems.removeAll { $0.id == item.id }
-        if item.willConvert { busy = "Конвертируем \(item.formatLabel) → \(item.popularTarget?.label ?? "")…" }
+        if item.willConvert { busy = "Converting \(item.formatLabel) → \(item.popularTarget?.label ?? "")…" }
         Task {
             let result = await MediaLoader.run { Result { try staging.commit(item.id) } }
             committing.remove(item.id)
@@ -836,7 +836,7 @@ final class Library {
     func convertMeme(_ id: MemeID, keepOriginal: Bool, done: @escaping @MainActor () -> Void = {}) {
         guard let c = collection, let p = formats(of: id).primary, let meme = meme(id),
               let target = FormatPolicy.popularTarget(kind: meme.kind, ext: p.ext, codecs: p.codecs) else { return }
-        busy = "Конвертируем \(p.formatLabel) → \(target.label)…"
+        busy = "Converting \(p.formatLabel) → \(target.label)…"
         let analyzer = analyzer
         Task.detached {
             let result = Result { try c.convertMeme(id, keepOriginal: keepOriginal, analyzer: analyzer) }
@@ -865,7 +865,7 @@ final class Library {
     /// Writes an exported copy to `url` (never stored in the collection).
     func export(_ id: MemeID, as choice: ExportChoice, to url: URL, then: (@MainActor (URL) -> Void)? = nil) {
         guard let c = collection else { return }
-        if case .format(let f) = choice { busy = "Экспортируем в \(f.label)…" } else { busy = "Экспортируем…" }
+        if case .format(let f) = choice { busy = "Exporting as \(f.label)…" } else { busy = "Exporting…" }
         let analyzer = analyzer
         Task.detached {
             let result = Result { try c.export(id, as: choice, to: url, analyzer: analyzer) }
@@ -873,7 +873,7 @@ final class Library {
                 self.busy = nil
                 switch result {
                 case .success(let out):
-                    if let then { then(out) } else { self.notice = "Экспортировано: \(out.lastPathComponent)"; self.noticeAction = nil }
+                    if let then { then(out) } else { self.notice = "Exported \(out.lastPathComponent)"; self.noticeAction = nil }
                 case .failure(let e): self.errorMessage = "\(e)"
                 }
             }
@@ -973,7 +973,7 @@ final class Library {
 
     func scanDuplicates() {
         guard let c = collection else { return }
-        busy = "Проверяем…"
+        busy = "Scanning…"
         let images = platform.images
         Task.detached {
             let clusters = (try? DuplicateScanner(collection: c).clusters()) ?? []
@@ -1110,16 +1110,16 @@ private func megabytes(_ bytes: Int64) -> String {
 
 private func xImportLabel(_ name: String, _ p: XImporter.Progress) -> String {
     if let until = p.waitingUntil {
-        return "x.com ограничил частоту запросов. Продолжим в \(until.formatted(date: .omitted, time: .shortened)); сохранено \(p.staged) — \(name)"
+        return "x.com asked to slow down — continuing at \(until.formatted(date: .omitted, time: .shortened)) (\(p.staged) \(name) saved so far)"
     }
-    return "Импорт x.com — \(name): во входящих \(p.staged), в цепочках \(p.chain), уже есть \(p.skipped), \(megabytes(p.bytes))"
+    return "Importing x.com \(name): \(p.staged) staged with \(p.chain) tweets of their threads, \(p.skipped) already here, \(megabytes(p.bytes))"
 }
 
 private func xImportSummary(_ name: String, _ p: XImporter.Progress, stopped: Bool) -> String {
-    var s = stopped ? "Остановлено. Во входящих \(p.staged) — \(name). Для продолжения повторите импорт."
-                    : p.caughtUp && p.staged == 0 ? "Новых элементов нет: \(name)."
-                    : "Во входящих \(p.staged) — \(name), твитов в цепочках: \(p.chain) (\(megabytes(p.bytes)))" + (p.skipped > 0 ? "; уже были в коллекции: \(p.skipped)." : ".")
-    if p.chainMissing > 0 { s += " Недоступных твитов в цепочках x.com: \(p.chainMissing)." }
-    if p.mediaMissing > 0 { s += " Не удалось загрузить часть медиа: \(p.mediaMissing)." }
+    var s = stopped ? "Stopped: \(p.staged) \(name) staged; import again to continue."
+                    : p.caughtUp && p.staged == 0 ? "No new \(name) — already up to date."
+                    : "Staged \(p.staged) \(name) with \(p.chain) tweets of their threads (\(megabytes(p.bytes)))" + (p.skipped > 0 ? "; \(p.skipped) were already here." : ".")
+    if p.chainMissing > 0 { s += " \(p.chainMissing) thread tweets are gone from x.com." }
+    if p.mediaMissing > 0 { s += " \(p.mediaMissing) without some media (download failed)." }
     return s
 }

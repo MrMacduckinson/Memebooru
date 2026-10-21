@@ -26,7 +26,7 @@ final class ShareViewController: UIViewController {
 
 @Observable @MainActor
 final class ShareModel {
-    var status = "Сохраняем…"
+    var status = "Saving…"
     var staged: [StagedItem] = []
     var failed: [String] = []
     var done = false
@@ -34,7 +34,7 @@ final class ShareModel {
     func ingest(_ items: [NSExtensionItem]) async {
         SharedCollection.shareMachineID()
         guard let url = SharedCollection.url, let collection = try? Collection.openOrCreate(at: url) else {
-            status = "Не удалось открыть коллекцию"; done = true; return
+            status = "Cannot open collection"; done = true; return
         }
         let platform = PlatformApple.make()
         let staging = StagingArea(collection: collection, analyzer: MediaAnalyzer(platform: platform))
@@ -44,7 +44,7 @@ final class ShareModel {
                 catch { failed.append("\(error)") }
             }
         }
-        status = staged.isEmpty ? "Ничего не сохранено" : "Добавлено во входящие"
+        status = staged.isEmpty ? "Nothing saved" : "Saved to staging"
         done = true
     }
 
@@ -77,7 +77,7 @@ extension NSItemProvider {
     @MainActor func file(for type: UTType) async throws -> URL {
         try await withCheckedThrowingContinuation { cont in
             _ = loadFileRepresentation(forTypeIdentifier: type.identifier) { url, error in
-                guard let url else { cont.resume(throwing: error ?? CollectionError("нет файла")); return }
+                guard let url else { cont.resume(throwing: error ?? CollectionError("no file")); return }
                 let dest = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + "-" + url.lastPathComponent)
                 do { try FileManager.default.copyItem(at: url, to: dest); cont.resume(returning: dest) }
                 catch { cont.resume(throwing: error) }
@@ -90,7 +90,7 @@ extension NSItemProvider {
             loadItem(forTypeIdentifier: type.identifier) { item, error in
                 let value: T? = (item as? T) ?? ((item as? Data).flatMap { String(data: $0, encoding: .utf8) } as? T)
                 if let value { cont.resume(returning: value) }
-                else { cont.resume(throwing: error ?? CollectionError("неподдерживаемый элемент для импорта")) }
+                else { cont.resume(throwing: error ?? CollectionError("unexpected shared item")) }
             }
         }
     }
@@ -108,7 +108,7 @@ struct ShareSheetView: View {
                     Text("\(i.kind.rawValue) · \(i.originalName ?? "")  →  \(i.effectiveTags.joined(separator: " "))").font(.caption).foregroundStyle(.secondary)
                 }
                 ForEach(model.failed, id: \.self) { Text($0).font(.caption).foregroundStyle(.red) }
-                Button("Готово", action: done).buttonStyle(.glassProminent).keyboardShortcut(.defaultAction)
+                Button("Done", action: done).buttonStyle(.glassProminent).keyboardShortcut(.defaultAction)
             } else {
                 ProgressView(model.status)
             }

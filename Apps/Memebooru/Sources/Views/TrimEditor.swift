@@ -28,13 +28,13 @@ struct TrimBar: View {
             .clipShape(RoundedRectangle(cornerRadius: 4))
 
             HStack(spacing: Space.m) {
-                TimeField(title: "Начало", ms: Binding(get: { range.startMs }, set: { range.startMs = min(max(0, $0), range.endMs - 1) }))
-                TimeField(title: "Конец", ms: Binding(get: { range.endMs }, set: { range.endMs = max(min(durationMs, $0), range.startMs + 1) }))
-                Text("Останется \(TimeField.format(range.durationMs)) из \(TimeField.format(durationMs))").zfont(11).foregroundStyle(Theme.muted)
+                TimeField(title: "Start", ms: Binding(get: { range.startMs }, set: { range.startMs = min(max(0, $0), range.endMs - 1) }))
+                TimeField(title: "End", ms: Binding(get: { range.endMs }, set: { range.endMs = max(min(durationMs, $0), range.startMs + 1) }))
+                Text("Keeps \(TimeField.format(range.durationMs)) of \(TimeField.format(durationMs))").zfont(11).foregroundStyle(Theme.muted)
                 Spacer()
-                GlassIconButton(symbol: "minus.magnifyingglass") { zoom = max(1, zoom / 2) }.help("Уменьшить")
-                GlassIconButton(symbol: "plus.magnifyingglass") { zoom = min(256, zoom * 2) }.help("Увеличьте масштаб для точности до миллисекунды")
-                Text(zoom <= 1 ? "Целиком" : "\(Int(zoom))×").zfont(11).foregroundStyle(Theme.muted).monospacedDigit().frame(width: 40, alignment: .leading)
+                GlassIconButton(symbol: "minus.magnifyingglass") { zoom = max(1, zoom / 2) }.help("Zoom out")
+                GlassIconButton(symbol: "plus.magnifyingglass") { zoom = min(256, zoom * 2) }.help("Zoom in, to place the ends to the millisecond")
+                Text(zoom <= 1 ? "Whole" : "\(Int(zoom))×").zfont(11).foregroundStyle(Theme.muted).monospacedDigit().frame(width: 40, alignment: .leading)
             }
         }
     }
@@ -140,7 +140,7 @@ struct TrimEditor: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Space.l) {
             HStack(alignment: .firstTextBaseline) {
-                Text("Длительность").dfont(22).foregroundStyle(Theme.text)
+                Text("Trim").dfont(22).foregroundStyle(Theme.text)
                 Spacer()
                 if working { MBSpinner() }
             }
@@ -148,23 +148,23 @@ struct TrimEditor: View {
             if duration > 0 {
                 TrimBar(durationMs: duration, range: $range, peaks: peaks, playhead: playhead)
             } else if !working {
-                Text("Не удалось прочитать звук в этом файле.").zfont(12).foregroundStyle(Theme.muted)
+                Text("Couldn't read the sound in this file.").zfont(12).foregroundStyle(Theme.muted)
             }
             HStack(spacing: Space.s) {
-                GlassButton(title: playing ? "Остановить" : "Воспроизвести выбранный фрагмент", symbol: playing ? "stop.fill" : "play.fill") { togglePlay() }
+                GlassButton(title: playing ? "Stop" : "Play what's kept", symbol: playing ? "stop.fill" : "play.fill") { togglePlay() }
                     .disabled(duration == 0)
-                GlassButton(title: "Найти тишину по краям", symbol: "wand.and.rays") { Task { await detect() } }.disabled(working)
-                GlassButton(title: "Оставить целиком", symbol: "arrow.uturn.backward") { range = TimeRange(startMs: 0, endMs: duration); note = "Звуковая дорожка сохранится целиком." }
+                GlassButton(title: "Find quiet ends", symbol: "wand.and.rays") { Task { await detect() } }.disabled(working)
+                GlassButton(title: "Keep it all", symbol: "arrow.uturn.backward") { range = TimeRange(startMs: 0, endMs: duration); note = "The whole sound is kept." }
                 if source.edit != nil {
-                    LinkText(text: "Отменить все изменения и вернуть оригинал", color: Theme.danger, size: 12) { library.applyEdit(target, nil) }
+                    LinkText(text: "Undo all edits (back to the original)", color: Theme.danger, size: 12) { library.applyEdit(target, nil) }
                 }
             }
             Spacer(minLength: 0)
             HStack {
                 Text(note).zfont(12).foregroundStyle(Theme.muted)
                 Spacer()
-                GlassButton(title: "Отмена") { dismiss() }.keyboardShortcut(.cancelAction)
-                GlassButton(title: "Применить", symbol: "checkmark", prominent: true) {
+                GlassButton(title: "Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
+                GlassButton(title: "Apply", symbol: "checkmark", prominent: true) {
                     let whole = range.startMs <= 0 && range.endMs >= duration
                     library.applyEdit(target, whole ? nil : MediaEdit(trim: range))
                 }
@@ -184,7 +184,7 @@ struct TrimEditor: View {
             range = source.edit?.trim ?? TimeRange(startMs: 0, endMs: w.durationMs)
         }
         player.replaceCurrentItem(with: AVPlayerItem(url: source.url))
-        if source.edit?.trim != nil { note = "Уже обрезано. Измените границы или выберите «Оставить целиком»."; working = false } else { await detect() }
+        if source.edit?.trim != nil { note = "Trimmed earlier; change it, or choose Keep it all."; working = false } else { await detect() }
     }
 
     private func detect() async {
@@ -192,9 +192,9 @@ struct TrimEditor: View {
         defer { working = false }
         if let r = await library.detectSilence(source) {
             range = r
-            note = "Тишина: \(TimeField.format(r.startMs)) в начале и \(TimeField.format(duration - r.endMs)) в конце."
+            note = "Cut \(TimeField.format(r.startMs)) of quiet at the start and \(TimeField.format(duration - r.endMs)) at the end."
         } else {
-            note = "Тишина по краям не найдена. Укажите границы вручную."
+            note = "No quiet ends found — drag the handles to trim."
         }
     }
 

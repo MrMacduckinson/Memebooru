@@ -12,14 +12,14 @@ typealias ViewRepresentable = UIViewRepresentable
 struct XLoginView: View {
     @Environment(\.dismiss) private var dismiss
     let onSession: (XSession) -> Void
-    @State private var status = "Войдите в x.com. После входа окно закроется автоматически."
+    @State private var status = "Log in to x.com. The window closes automatically once you're in."
 
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: Space.m) {
-                Text("Войти в x.com").dfont(18).foregroundStyle(Theme.headerText)
+                Text("Log in to x.com").dfont(18).foregroundStyle(Theme.headerText)
                 Spacer()
-                GlassButton(title: "Отмена") { dismiss() }
+                GlassButton(title: "Cancel") { dismiss() }
             }
             .padding(.horizontal, Space.l).padding(.vertical, Space.s)
             .background(LinearGradient(colors: [Theme.headerTop, Theme.headerBottom], startPoint: .top, endPoint: .bottom))

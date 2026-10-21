@@ -30,8 +30,8 @@ struct StagingView: View {
                         }
                     }
                     if !library.stagedItems.isEmpty && shown.isEmpty {
-                        EmptyState(icon: "magnifyingglass", title: "Нет совпадений",
-                                   subtitle: "Во входящих ничего не найдено по запросу «\(library.stagingFilter)». Попробуйте другие слова или тип.")
+                        EmptyState(icon: "magnifyingglass", title: "Nothing matches",
+                                   subtitle: "No staged items match “\(library.stagingFilter)”. Try other words or another kind.")
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -54,15 +54,15 @@ struct StagingView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: Space.l) {
-            PageHeader(title: "Входящие", subtitle: "Во входящих: \(library.stagedItems.count)") {
-                GlassButton(title: "Сохранить без дубликатов") { library.commitAllClean() }
+            PageHeader(title: "Staging", subtitle: "\(library.stagedItems.count) pending") {
+                GlassButton(title: "Commit all clean") { library.commitAllClean() }
                     .disabled(library.stagedItems.isEmpty)
-                GlassButton(title: "Убрать всё", tint: Theme.danger) { library.discardAllStaged() }
+                GlassButton(title: "Discard all", tint: Theme.danger) { library.discardAllStaged() }
                     .disabled(library.stagedItems.isEmpty)
-                GlassButton(title: "Добавить файлы", symbol: "plus", prominent: true) { library.presentFileImporter = true }
+                GlassButton(title: "Add files", symbol: "plus", prominent: true) { library.presentFileImporter = true }
             }
             if library.stagedItems.isEmpty {
-                EmptyState(icon: "tray", title: "Входящие пусты", subtitle: "Перетащите файлы в окно или нажмите «Добавить» вверху.")
+                EmptyState(icon: "tray", title: "Nothing pending", subtitle: "Drop files anywhere in the window, or use Add in the header.")
             }
         }
     }
@@ -74,14 +74,14 @@ struct StagingView: View {
             if counts.count > 1 { KindTabs(counts: counts, total: library.stagedItems.count, selection: $lib.stagingKind) }
             Spacer(minLength: Space.l)
             if library.stagingGrid {
-                LinkText(text: library.stagingSelecting ? "Закончить выбор" : "Выбрать", size: 13, weight: library.stagingSelecting ? .bold : .regular) {
+                LinkText(text: library.stagingSelecting ? "Done selecting" : "Select", size: 13, weight: library.stagingSelecting ? .bold : .regular) {
                     library.stagingSelecting.toggle()
                 }
-                .help("Выберите несколько элементов для коллажа, сохранения или удаления. Также можно выбирать с зажатой ⌘.")
+                .help("Choose several items: combine pictures into one meme, or commit / discard them together. ⌘-click also selects.")
                 .accessibilityIdentifier("staging.select")
             }
             LayoutTabs(grid: $lib.stagingGrid)
-            TextField("", text: $lib.stagingFilter, prompt: Text("Поиск во входящих").foregroundStyle(Theme.faint))
+            TextField("", text: $lib.stagingFilter, prompt: Text("Find in staging").foregroundStyle(Theme.faint))
                 .textFieldStyle(.plain).zfont(12).focused($filterFocused)
                 .accessibilityIdentifier("stagingFilter")
                 .fieldChrome(focused: filterFocused)
@@ -111,18 +111,18 @@ struct SelectionBar: View {
         let pictures = chosen.filter(Library.combinable)
         HStack(spacing: Space.m) {
             Image(systemName: "checkmark.circle.fill").font(.system(size: 13)).foregroundStyle(Theme.link)
-            Text(chosen.isEmpty ? "Выбирайте изображения в том порядке, в котором они должны быть в коллаже."
+            Text(chosen.isEmpty ? "Click items to choose them; pictures are combined in the order you click them."
                                 : "\(chosen.count) chosen").zfont(12).foregroundStyle(Theme.text)
             Spacer(minLength: Space.m)
-            GlassButton(title: pictures.count >= 2 ? "Объединить изображения: \(pictures.count)" : "Собрать коллаж", symbol: "rectangle.split.2x1", prominent: true) {
+            GlassButton(title: pictures.count >= 2 ? "Combine \(pictures.count) pictures" : "Combine pictures", symbol: "rectangle.split.2x1", prominent: true) {
                 library.compositeEditor = .new(pictures.map(\.id))
             }
             .disabled(pictures.count < 2 || pictures.count != chosen.count)
-            .help(pictures.count != chosen.count ? "В коллаж можно объединить только изображения." : "Объединить в один мем")
+            .help(pictures.count != chosen.count ? "Only pictures can be combined (not GIFs, videos, tweets or texts)." : "Put them together into one meme")
             .accessibilityIdentifier("selection.combine")
-            GlassButton(title: "Сохранить") { library.commitSelected() }.disabled(chosen.isEmpty)
-            GlassButton(title: "Убрать", tint: Theme.danger) { library.discardSelected() }.disabled(chosen.isEmpty)
-            GlassButton(title: "Отмена") { library.stagingSelecting = false }
+            GlassButton(title: "Commit") { library.commitSelected() }.disabled(chosen.isEmpty)
+            GlassButton(title: "Discard", tint: Theme.danger) { library.discardSelected() }.disabled(chosen.isEmpty)
+            GlassButton(title: "Cancel") { library.stagingSelecting = false }
         }
         .padding(.horizontal, Space.m).padding(.vertical, Space.s)
         .background(RoundedRectangle(cornerRadius: 4).fill(Theme.paper))
@@ -135,8 +135,8 @@ struct LayoutTabs: View {
     @Binding var grid: Bool
     var body: some View {
         HStack(spacing: Space.m) {
-            tab("Сетка", "square.grid.2x2", on: grid) { grid = true }.accessibilityIdentifier("layout.grid")
-            tab("Список", "list.bullet", on: !grid) { grid = false }.accessibilityIdentifier("layout.list")
+            tab("Grid", "square.grid.2x2", on: grid) { grid = true }.accessibilityIdentifier("layout.grid")
+            tab("List", "list.bullet", on: !grid) { grid = false }.accessibilityIdentifier("layout.list")
         }
     }
     private func tab(_ title: String, _ symbol: String, on: Bool, _ action: @escaping () -> Void) -> some View {
@@ -178,10 +178,10 @@ struct StagedRow: View {
                     StagedTweetPreview(item: item).frame(maxWidth: compact ? .infinity : 480)
                     VStack(alignment: .leading, spacing: Space.s) {
                         HStack(spacing: Space.l) {
-                            LinkText(text: expanded ? "Закончить редактирование" : "Изменить теги и текст", color: Theme.link, size: 12, weight: .bold) { toggle() }
+                            LinkText(text: expanded ? "Done editing" : "Edit tags and text", color: Theme.link, size: 12, weight: .bold) { toggle() }
                             let model = library.tweetModel(staged: item, withQuote: false)
                             if !model.media.isEmpty {
-                                LinkText(text: model.mediaOnly ? "Показать как твит" : "Показать только медиа", color: Theme.link, size: 12, weight: .bold) {
+                                LinkText(text: model.mediaOnly ? "Show as tweet" : "Show as media only", color: Theme.link, size: 12, weight: .bold) {
                                     library.toggleTweetDisplay(staged: item)
                                 }
                             }
@@ -209,12 +209,12 @@ struct StagedRow: View {
             }
             if expanded {
                 VStack(alignment: .leading, spacing: Space.m) {
-                    Field(title: "Обычные теги", text: $userTags, tint: Theme.general, onCommit: save)
-                    Field(title: "Метатеги", text: $metaTags, tint: Theme.meta, onCommit: save)
-                    Field(title: "Текст", text: $textExact, onCommit: save)
-                    Field(title: "Дословно", text: $textVerbatim, onCommit: save)
-                    Field(title: "Описание", text: $context, lines: 3, onCommit: save)
-                    HStack { Spacer(); GlassButton(title: "Сохранить") { save() } }.frame(maxWidth: Theme.fieldMaxWidth)
+                    Field(title: "General tags", text: $userTags, tint: Theme.general, onCommit: save)
+                    Field(title: "Meta tags", text: $metaTags, tint: Theme.meta, onCommit: save)
+                    Field(title: "Text", text: $textExact, onCommit: save)
+                    Field(title: "Verbatim", text: $textVerbatim, onCommit: save)
+                    Field(title: "Context", text: $context, lines: 3, onCommit: save)
+                    HStack { Spacer(); GlassButton(title: "Save") { save() } }.frame(maxWidth: Theme.fieldMaxWidth)
                 }
                 .padding(.leading, compact || item.kind == .tweet ? 0 : thumbSide + Space.l)   // editor lines up with the text column
                 .task(id: item.id) {
@@ -230,7 +230,7 @@ struct StagedRow: View {
 
     @ViewBuilder private var title: some View {
         let name = LinkText(text: item.originalName ?? item.id, color: Theme.link, size: 13, weight: .bold) { toggle() }
-        let origin = Text("\(item.kind.categoryName) · источник: \(item.source)").zfont(11).foregroundStyle(Theme.muted)
+        let origin = Text("\(item.kind.categoryName) · from \(item.source)").zfont(11).foregroundStyle(Theme.muted)
         if compact { name; origin } else {
             HStack(alignment: .firstTextBaseline, spacing: Space.s) { name; origin }
         }
@@ -250,7 +250,7 @@ struct StagedRow: View {
         if !dups.isEmpty {
             FlowLayout(spacing: Space.s) {
                 Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 11)).foregroundStyle(Theme.danger)
-                Text("Возможных дубликатов: \(dups.count)").zfont(12, .bold).foregroundStyle(Theme.danger)
+                Text("\(dups.count) possible duplicate\(dups.count == 1 ? "" : "s")").zfont(12, .bold).foregroundStyle(Theme.danger)
                 ForEach(Array(dups.enumerated()), id: \.offset) { _, h in
                     if let id = h.memeID, let m = library.meme(id) {
                         Button { library.openDetail(id) } label: { ThumbMini(meme: m).thumbShadow() }.buttonStyle(.plain).linkPointer()
@@ -263,7 +263,7 @@ struct StagedRow: View {
 
     private var actions: some View {
         HStack(spacing: Space.s) {
-            GlassButton(title: item.willConvert && library.canConvert ? "Конвертировать и сохранить" : "Сохранить", prominent: true) { save(); library.commit(item) }
+            GlassButton(title: item.willConvert && library.canConvert ? "Convert & commit" : "Commit", prominent: true) { save(); library.commit(item) }
             GlassIconButton(symbol: "trash", tint: Theme.danger) { library.discard(item) }
         }
     }
@@ -289,7 +289,7 @@ struct StagedThumb: View {
             if [.image, .gif, .video].contains(item.kind) {
                 // Any picture or video format: a real frame (made on the media pool, ffmpeg for what the OS can't read).
                 LoadedImage(key: "staged:" + item.sha256, fit: .fit, load: { await $0.loadStagedThumbnail(item) }) { failed in
-                    LitCard(label: item.kind.categoryName.uppercased()) {
+                    LitCard(label: item.kind.rawValue.uppercased()) {
                         Group {
                             if failed { Image(systemName: item.kind.symbol).font(.system(size: 22)).foregroundStyle(Theme.faint) }
                             else { MBSpinner() }
@@ -305,12 +305,12 @@ struct StagedThumb: View {
                     }
                 }
             } else if item.kind == .text || item.kind == .tweet {
-                LitCard(label: "ТЕКСТ") {
+                LitCard(label: "TEXT") {
                     Text(item.textVerbatim ?? "").zfont(11).foregroundStyle(Color(hex: 0x222222))
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading).padding(Space.s)
                 }.thumbShadow()
             } else {
-                LitCard(label: item.kind.categoryName.uppercased()) {
+                LitCard(label: item.kind.rawValue.uppercased()) {
                     Image(systemName: item.kind.symbol).font(.system(size: 22)).foregroundStyle(Theme.faint)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }.thumbShadow()
@@ -328,31 +328,31 @@ struct StagedFormatChoice: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Space.s) {
             let icon = Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 11)).foregroundStyle(Theme.warnInk)
-            let format = Text("Необычный формат: \(item.formatLabel)").zfont(12, .bold).foregroundStyle(Theme.warnInk)
+            let format = Text("Uncommon format: \(item.formatLabel)").zfont(12, .bold).foregroundStyle(Theme.warnInk)
             ViewThatFits(in: .horizontal) {
                 HStack(alignment: .firstTextBaseline, spacing: Space.iconLabel) {
                     icon; format
-                    Text("— Telegram, телефоны и браузеры могут не поддерживать этот формат.").zfont(12).foregroundStyle(Theme.muted)
+                    Text("— Telegram, phones and browsers may not open it.").zfont(12).foregroundStyle(Theme.muted)
                 }
                 // Narrow: the explanation wraps under the format name.
                 HStack(alignment: .firstTextBaseline, spacing: Space.iconLabel) {
                     icon
                     VStack(alignment: .leading, spacing: Space.xs) {
                         format
-                        Text("Telegram, телефоны и браузеры могут не поддерживать этот формат.").zfont(12).foregroundStyle(Theme.muted)
+                        Text("Telegram, phones and browsers may not open it.").zfont(12).foregroundStyle(Theme.muted)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
             }
             if library.canConvert, let target = item.popularTarget {
                 MBToggle(isOn: Binding(get: { item.willConvert }, set: { v in var i = item; i.convert = v; library.updateStaged(i) }),
-                         label: "Конвертировать в \(target.label) при добавлении")
+                         label: "Convert to \(target.label) when adding")
                 MBToggle(isOn: Binding(get: { item.willKeepOriginal }, set: { v in var i = item; i.keepOriginal = v; library.updateStaged(i) }),
-                         label: "Также сохранить оригинал \(item.formatLabel)")
+                         label: "Also keep the original \(item.formatLabel)")
                     .disabled(!item.willConvert)
                     .opacity(item.willConvert ? 1 : 0.45)
             } else {
-                Text("Для конвертации нужен ffmpeg. Файл будет добавлен в исходном формате.").zfont(12).foregroundStyle(Theme.muted)
+                Text("Converting needs the media tools (ffmpeg); it will be added as it is.").zfont(12).foregroundStyle(Theme.muted)
             }
         }
         .padding(Space.m)
@@ -379,7 +379,7 @@ struct StagedTweetPreview: View {
                         Rectangle().fill(Theme.border).frame(width: 2, height: Space.m).padding(.leading, Space.l + 21)
                     }
                 } else {
-                    LinkText(text: "Показать предыдущие твиты: \(ancestors.count)", color: Theme.link, size: 12) {
+                    LinkText(text: "Show the \(ancestors.count == 1 ? "tweet" : "\(ancestors.count) tweets") it replies to", color: Theme.link, size: 12) {
                         showThread = true
                     }
                     .padding(.bottom, Space.s)
@@ -398,7 +398,7 @@ struct KindTabs: View {
 
     var body: some View {
         FlowLayout(spacing: Space.l) {
-            tab(nil, "Все", total)
+            tab(nil, "All", total)
             ForEach(MemeKind.allCases.filter { counts[$0] != nil }, id: \.self) { k in tab(k, k.categoryName, counts[k] ?? 0) }
         }
     }

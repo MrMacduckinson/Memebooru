@@ -2,7 +2,7 @@ import SwiftUI
 import MemebooruCore
 import UniformTypeIdentifiers
 
-/// deviantART-2011 shell: dark green header across the top, "Просмотр / Категория" column on the left,
+/// deviantART-2011 shell: dark green header across the top, "Browse / Category" column on the left,
 /// the page on the right. Detail pages open over the right side only, so the browse column stays put.
 struct RootView: View {
     @Environment(Library.self) private var library
@@ -25,7 +25,7 @@ struct RootView: View {
         VStack(spacing: 0) {
             Header(compact: compact) { withAnimation(.easeOut(duration: 0.2)) { drawerOpen.toggle() } }.zIndex(3)
             if let b = library.busy { ProgressBar(label: b).zIndex(2) }
-            if let label = library.lastUndoLabel { UndoBar(label: localizedHistoryLabel(label)).zIndex(2) }
+            if let label = library.lastUndoLabel { UndoBar(label: label).zIndex(2) }
             if let notice = library.notice { NoticeBar(text: notice).zIndex(2) }
             HStack(spacing: 0) {
                 if !compact { BrowseSidebar() }
@@ -54,7 +54,7 @@ struct RootView: View {
         .fileImporter(isPresented: $lib.presentCollectionPicker, allowedContentTypes: [.folder]) { r in
             if case .success(let url) = r { library.open(url) }
         }
-        .alert("Ошибка", isPresented: Binding(get: { library.errorMessage != nil }, set: { if !$0 { library.errorMessage = nil } })) {
+        .alert("Error", isPresented: Binding(get: { library.errorMessage != nil }, set: { if !$0 { library.errorMessage = nil } })) {
             Button("OK") {}
         } message: { Text(library.errorMessage ?? "") }
         .dropDestination(for: URL.self) { urls, _ in library.stage(urls: urls); return true }
@@ -183,7 +183,7 @@ struct Header: View {
             HeaderLink(title: library.name, symbol: "chevron.right.circle.fill", color: Theme.headerAccent) {
                 library.presentCollectionPicker = true
             }
-            .help("Текущая коллекция. Нажмите, чтобы открыть другую")
+            .help("Current collection — click to open another")
         }
     }
 }
@@ -198,9 +198,9 @@ struct WaybackStatus: View {
         let n = library.waybackPending
         let tweets = n == 1 ? "1 tweet" : "\(n) tweets"
         let label: String = {
-            if !library.waybackEnabled { return "Wayback на паузе, ожидают: \(tweets)" }
-            if let at = library.waybackRetryAt { return "Wayback занят: \(tweets), повтор в \(at.formatted(date: .omitted, time: .shortened))" }
-            return "Сохраняем в Wayback: \(tweets)"
+            if !library.waybackEnabled { return "Wayback paused: \(tweets) waiting" }
+            if let at = library.waybackRetryAt { return "Wayback busy: \(tweets), retry at \(at.formatted(date: .omitted, time: .shortened))" }
+            return "Saving \(tweets) to Wayback"
         }()
         Button { library.setWayback(enabled: !library.waybackEnabled) } label: {
             Text(label).zfont(12).foregroundStyle(hover ? Theme.headerText : Theme.headerMuted).underline(hover).lineLimit(1)
@@ -208,8 +208,8 @@ struct WaybackStatus: View {
         .buttonStyle(.plain).linkPointer()
         .onHover { hover = $0 }
         .help(library.waybackEnabled
-              ? "Сохранённые твиты архивируются в Wayback Machine (web.archive.org), чтобы сохранить их после удаления из x.com. Нажмите для паузы."
-              : "Архивация твитов в Wayback Machine приостановлена. Нажмите для продолжения.")
+              ? "Saved tweets are copied to the Wayback Machine (web.archive.org) in the background, so they survive deletion on x.com. Click to pause."
+              : "Copying saved tweets to the Wayback Machine is paused. Click to resume.")
     }
 }
 
@@ -288,8 +288,8 @@ struct BrowseSidebar: View {
 
     /// Kind meta-tags, shown like the site's category list.
     private static let kindTags: [(tag: String, title: String)] = [
-        ("picture", "Изображения"), ("gif", "GIFs"), ("video", "Видео"), ("audio", "Аудио"),
-        ("text", "Текст"), ("article", "Статьи"), ("tweet", "Твиты"),
+        ("picture", "Pictures"), ("gif", "GIFs"), ("video", "Videos"), ("audio", "Audio"),
+        ("text", "Text"), ("article", "Articles"), ("tweet", "Tweets"),
     ]
 
     var body: some View {
@@ -298,31 +298,31 @@ struct BrowseSidebar: View {
             .sorted { ($0.usage, $1.tag.name) > ($1.usage, $0.tag.name) }.prefix(16)
         ScrollView {
             VStack(alignment: .leading, spacing: Space.xl) {
-                group("Просмотр") {
-                    NavRow(title: "Коллекция", symbol: "photo.on.rectangle.angled", section: .gallery, count: nil)
-                    NavRow(title: "Входящие", symbol: "tray.and.arrow.down", section: .staging, count: library.stagedItems.count)
-                    NavRow(title: "Дубликаты", symbol: "square.on.square", section: .duplicates, count: library.duplicateClusters.count)
-                    NavRow(title: "История", symbol: "clock.arrow.circlepath", section: .history, count: nil)
+                group("Browse") {
+                    NavRow(title: "Posts", symbol: "photo.on.rectangle.angled", section: .gallery, count: nil)
+                    NavRow(title: "Staging", symbol: "tray.and.arrow.down", section: .staging, count: library.stagedItems.count)
+                    NavRow(title: "Duplicates", symbol: "square.on.square", section: .duplicates, count: library.duplicateClusters.count)
+                    NavRow(title: "History", symbol: "clock.arrow.circlepath", section: .history, count: nil)
                 }
-                group("Управление") {
-                    NavRow(title: "Теги", symbol: "tag", section: .tags, count: nil)
-                    NavRow(title: "Синхронизация", symbol: "arrow.triangle.2.circlepath", section: .sync, count: library.sync.nearby.count)
+                group("Manage") {
+                    NavRow(title: "Tags", symbol: "tag", section: .tags, count: nil)
+                    NavRow(title: "Sync", symbol: "arrow.triangle.2.circlepath", section: .sync, count: library.sync.nearby.count)
                 }
                 let kinds = Self.kindTags.filter { (usage[$0.tag] ?? 0) > 0 }
                 if !kinds.isEmpty {
-                    group("Категория") {
+                    group("Category") {
                         ForEach(kinds, id: \.tag) { k in CategoryRow(title: k.title, tag: k.tag, count: usage[k.tag] ?? 0) }
                     }
                 }
                 if !popular.isEmpty {
-                    group("Популярные теги") {
+                    group("Popular tags") {
                         ForEach(Array(popular), id: \.id) { r in CategoryRow(title: r.tag.name, tag: r.tag.name, count: r.usage) }
                     }
                 }
                 collectionPill
             }
             .padding(.horizontal, Space.l)
-            .padding(.top, Space.xl)          // same top as the page, so "Просмотр" lines up with the page title
+            .padding(.top, Space.xl)          // same top as the page, so "Browse" lines up with the page title
             .padding(.bottom, Space.xxl)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -344,7 +344,7 @@ struct BrowseSidebar: View {
         Button { library.presentCollectionPicker = true } label: {
             HStack(spacing: Space.iconLabel) {
                 Image(systemName: "folder").font(.system(size: 11))
-                Text("\(library.name) · публикаций: \(library.memeCount)").zfont(11).lineLimit(1)
+                Text("\(library.name) · \(library.memeCount) posts").zfont(11).lineLimit(1)
             }
             .foregroundStyle(Theme.muted)
             .padding(.horizontal, Space.s).padding(.vertical, Space.xs)
@@ -353,7 +353,7 @@ struct BrowseSidebar: View {
             .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.rule))
         }
         .buttonStyle(.plain).linkPointer()
-        .help("Открыть другую коллекцию")
+        .help("Open another collection")
     }
 }
 
@@ -427,7 +427,7 @@ struct ProgressBar: View {
             Text(label).zfont(12, .bold)
             Spacer()
             if library.busyCancellable {
-                GlassButton(title: "Остановить", tint: Theme.danger) { library.cancelActiveImport() }
+                GlassButton(title: "Stop", tint: Theme.danger) { library.cancelActiveImport() }
             }
         }
         .padding(.horizontal, Space.l).padding(.vertical, Space.s)
@@ -446,7 +446,7 @@ struct NoticeBar: View {
             Text(text).zfont(12).foregroundStyle(Theme.text)
             Spacer()
             if let target = library.noticeAction {
-                GlassButton(title: "Проверить") { library.go(target); library.notice = nil }
+                GlassButton(title: "Review") { library.go(target); library.notice = nil }
             }
             Button { library.notice = nil } label: { Image(systemName: "xmark").font(.system(size: 10, weight: .bold)).foregroundStyle(Theme.muted) }
                 .buttonStyle(.plain).linkPointer()
@@ -468,9 +468,9 @@ struct UndoBar: View {
                     Image(systemName: "arrow.uturn.backward.circle").foregroundStyle(Theme.muted)
                     Text(label).zfont(12).foregroundStyle(Theme.text).accessibilityIdentifier("undoLabel")
                 }.contentShape(Rectangle())
-            }.buttonStyle(.plain).linkPointer().help("Открыть историю для просмотра и восстановления")
+            }.buttonStyle(.plain).linkPointer().help("Open history to review and restore items")
             Spacer()
-            GlassButton(title: "Отменить") { library.undoLast() }.accessibilityIdentifier("undoButton")
+            GlassButton(title: "Undo") { library.undoLast() }.accessibilityIdentifier("undoButton")
             Button { library.dismissUndo() } label: { Image(systemName: "xmark").font(.system(size: 10, weight: .bold)).foregroundStyle(Theme.muted) }
                 .buttonStyle(.plain).linkPointer()
         }
@@ -482,12 +482,12 @@ struct UndoBar: View {
 
 // MARK: - Add menu
 
-/// "Добавить ⌄" header menu — a dark dropdown, no native `Menu`.
+/// "Add ⌄" header menu — a dark dropdown, no native `Menu`.
 struct AddMenu: View {
     @Environment(Library.self) private var library
     #if os(iOS)
     @Environment(\.horizontalSizeClass) private var sizeClass
-    /// Phone: "Добавить" sits at the right edge, so the menu opens leftwards.
+    /// Phone: "Add" sits at the right edge, so the menu opens leftwards.
     private var menuAlignment: Alignment { sizeClass == .compact ? .topTrailing : .topLeading }
     #else
     private let menuAlignment = Alignment.topLeading
@@ -497,33 +497,33 @@ struct AddMenu: View {
     @State private var showText = false
     @State private var input = ""
     var body: some View {
-        HeaderLink(title: "Добавить", active: open) { open.toggle() }
-            .help("Добавить мемы")
+        HeaderLink(title: "Add", active: open) { open.toggle() }
+            .help("Add memes")
             .overlay(alignment: menuAlignment) {
                 if open { dropdown.offset(y: Theme.headerHeight - 6).zIndex(100) }
             }
-            .sheet(isPresented: $showTweet) { PromptSheet(title: "Ссылка на твит", text: $input, placeholder: "https://x.com/user/status/…") { library.importTweet(input); input = "" } }
-            .sheet(isPresented: $showText) { PromptSheet(title: "Текстовый мем", text: $input, placeholder: "Вставить текст…", multiline: true) { library.stage(text: input); input = "" } }
+            .sheet(isPresented: $showTweet) { PromptSheet(title: "Tweet URL", text: $input, placeholder: "https://x.com/user/status/…") { library.importTweet(input); input = "" } }
+            .sheet(isPresented: $showText) { PromptSheet(title: "Text meme", text: $input, placeholder: "Paste text…", multiline: true) { library.stage(text: input); input = "" } }
     }
 
     private var dropdown: some View {
         HeaderMenuPanel(width: 250) {
-            row("Файлы или папка…", "folder", trailing: "⌘O") { library.presentFileImporter = true }
-            row("Коллаж…", "rectangle.split.2x1") { library.presentCombineImporter = true }
-            row("Твит по ссылке…", "bird") { showTweet = true }
-            row("Текст…", "text.alignleft") { showText = true }
+            row("Files or folder…", "folder", trailing: "⌘O") { library.presentFileImporter = true }
+            row("Combined picture…", "rectangle.split.2x1") { library.presentCombineImporter = true }
+            row("Tweet by URL…", "bird") { showTweet = true }
+            row("Text…", "text.alignleft") { showText = true }
             HeaderMenuSeparator()
             if library.xLoggedIn {
-                row("Импорт понравившихся из x.com", "heart") { library.importLikes() }
-                row("Импорт закладок x.com", "bookmark") { library.importBookmarks() }
-                row("Выйти из x.com", "rectangle.portrait.and.arrow.right") { library.logoutX() }
+                row("Import x.com likes", "heart") { library.importLikes() }
+                row("Import x.com bookmarks", "bookmark") { library.importBookmarks() }
+                row("Log out of x.com", "rectangle.portrait.and.arrow.right") { library.logoutX() }
             } else {
-                row("Войти в x.com…", "person.crop.circle") { library.presentXLogin = true }
+                row("Log in to x.com…", "person.crop.circle") { library.presentXLogin = true }
             }
             HeaderMenuSeparator()
-            row(library.waybackEnabled ? "Приостановить архивацию Wayback" : "Продолжить архивацию Wayback",
+            row(library.waybackEnabled ? "Pause Wayback archiving" : "Resume Wayback archiving",
                 library.waybackEnabled ? "pause.circle" : "play.circle") { library.setWayback(enabled: !library.waybackEnabled) }
-            row("Удалить все твиты…", "trash", danger: true) { library.deleteAllTweets() }
+            row("Delete all tweets…", "trash", danger: true) { library.deleteAllTweets() }
         }
     }
 
@@ -534,7 +534,7 @@ struct AddMenu: View {
 
 // MARK: - Search
 
-/// The header search pill: sunken field + "Поиск" button, tag suggestions in a dark dropdown.
+/// The header search pill: sunken field + "Search" button, tag suggestions in a dark dropdown.
 struct SearchBox: View {
     @Environment(Library.self) private var library
     @FocusState private var focused: Bool
@@ -542,7 +542,7 @@ struct SearchBox: View {
     var body: some View {
         @Bindable var lib = library
         HStack(spacing: 0) {
-            TextField("", text: $lib.typedQuery, prompt: Text("теги, \"текст\", -исключение").foregroundStyle(Color(hex: 0x6F8175)))
+            TextField("", text: $lib.typedQuery, prompt: Text("tags, \"text\", -exclude").foregroundStyle(Color(hex: 0x6F8175)))
                 .textFieldStyle(.plain).zfont(12).foregroundStyle(Theme.text).focused($focused)
                 .accessibilityIdentifier("searchField")
                 .onSubmit { library.go(.gallery); focused = false }
@@ -554,7 +554,7 @@ struct SearchBox: View {
                 }.buttonStyle(.plain).linkPointer().padding(.trailing, Space.s)
             }
             Button { library.go(.gallery); focused = false } label: {
-                Text("Поиск").zfont(12).foregroundStyle(Theme.headerAccent)
+                Text("Search").zfont(12).foregroundStyle(Theme.headerAccent)
                     .padding(.horizontal, Space.s + 2).frame(maxHeight: .infinity)
                     .background(LinearGradient(colors: [Color(hex: 0x5E7064), Color(hex: 0x46554B)], startPoint: .top, endPoint: .bottom))
                     .overlay(alignment: .leading) { Color(hex: 0x2B3432).frame(width: 1) }
@@ -618,8 +618,8 @@ struct PromptSheet: View {
             }
             HStack(spacing: Space.s) {
                 Spacer()
-                GlassButton(title: "Отмена") { dismiss() }.keyboardShortcut(.cancelAction)
-                GlassButton(title: "Добавить", prominent: true) { onSubmit(); dismiss() }.keyboardShortcut(.defaultAction).disabled(text.isEmpty)
+                GlassButton(title: "Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
+                GlassButton(title: "Add", prominent: true) { onSubmit(); dismiss() }.keyboardShortcut(.defaultAction).disabled(text.isEmpty)
             }
         }
         .padding(Space.xl).frame(minWidth: 440)
@@ -680,8 +680,8 @@ extension MemeKind {
     /// Category name for "in …" captions.
     var categoryName: String {
         switch self {
-        case .image: "Изображения"; case .gif: "GIF"; case .video: "Видео"; case .audio: "Аудио"
-        case .text: "Текст"; case .article: "Статьи"; case .tweet: "Твиты"
+        case .image: "Pictures"; case .gif: "GIFs"; case .video: "Videos"; case .audio: "Audio"
+        case .text: "Text"; case .article: "Articles"; case .tweet: "Tweets"
         }
     }
 }

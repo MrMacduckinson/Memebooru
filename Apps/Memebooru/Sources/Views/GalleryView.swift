@@ -19,14 +19,14 @@ struct GalleryView: View {
             let cell = ((avail - gap * CGFloat(n - 1)) / CGFloat(n)).rounded(.down)
             ScrollView {
                 VStack(alignment: .leading, spacing: Space.l) {
-                    PageHeader(title: library.query.isEmpty ? "Коллекция" : "Поиск", subtitle: subtitle) {
-                        if !library.query.isEmpty { GlassButton(title: "Очистить поиск", symbol: "xmark") { library.query = "" } }
+                    PageHeader(title: library.query.isEmpty ? "Posts" : "Search", subtitle: subtitle) {
+                        if !library.query.isEmpty { GlassButton(title: "Clear search", symbol: "xmark") { library.query = "" } }
                     }
                     if library.results.isEmpty {
                         EmptyState(icon: library.query.isEmpty ? "photo.on.rectangle.angled" : "magnifyingglass",
-                                   title: library.query.isEmpty ? "В коллекции пока пусто" : "Ничего не найдено",
-                                   subtitle: library.query.isEmpty ? "Перетащите файлы в окно или нажмите «Добавить» вверху."
-                                                                   : "Ничего не найдено. Попробуйте другие теги или сократите запрос.")
+                                   title: library.query.isEmpty ? "No posts yet" : "Nothing found",
+                                   subtitle: library.query.isEmpty ? "Drop files anywhere in the window, or use Add in the header."
+                                                                   : "No posts match this search. Try fewer or different tags.")
                     } else {
                         LazyVGrid(columns: Array(repeating: GridItem(.fixed(cell), spacing: gap, alignment: .top), count: n),
                                   alignment: .leading, spacing: Space.xl) {
@@ -45,7 +45,7 @@ struct GalleryView: View {
 
     private var subtitle: String {
         let n = "\(library.results.count)\(library.nextCursor != nil ? "+" : "")"
-        return library.query.isEmpty ? "\(library.name) · найдено: \(n)" : "Результатов: \(n), запрос: «\(library.query.trimmingCharacters(in: .whitespaces))»"
+        return library.query.isEmpty ? "\(n) in \(library.name)" : "\(n) results for “\(library.query.trimmingCharacters(in: .whitespaces))”"
     }
 }
 
@@ -72,7 +72,7 @@ struct GalleryCell: View {
             .buttonStyle(.plain).linkPointer()
             .accessibilityIdentifier("postCell")
             .accessibilityLabel(title)
-            .contextMenu { Button("Удалить", role: .destructive) { library.delete(meme.id) } }
+            .contextMenu { Button("Delete", role: .destructive) { library.delete(meme.id) } }
 
             VStack(spacing: Space.xs / 2) {
                 Text(title).zfont(12, .bold).lineLimit(1).truncationMode(.tail)

@@ -1,24 +1,24 @@
-# Развёртывание публичной галереи
+# Deploying the public gallery
 
-Один origin хранит **публичный экспорт** и обслуживает его Caddy. При необходимости промежуточный reverse proxy передаёт запросы между CDN и origin. На промежуточном сервере копия коллекции не нужна; локальный кэш необязателен.
+An origin stores the **public export** and serves it with Caddy. An optional intermediate reverse proxy connects a CDN to that origin. The intermediate server does not need a copy of the collection; a local cache is optional.
 
-## Изоляция данных
+## Data isolation
 
-1. Создайте отдельную коллекцию, импортируйте подготовленный манифест во входящие и явно сохраните её элементы.
-2. Выполните `gallery publish` в **новую** директорию.
-3. Монтируйте в контейнер только эту директорию, только для чтения.
-4. Сохраните оригинальную нативную коллекцию вне web root.
+1. Create a separate collection, import the prepared manifest into staging and explicitly commit its entries.
+2. Run `gallery publish` into a **new** directory.
+3. Mount only that directory, read-only, in the web container.
+4. Keep the native collection outside the web root.
 
-Экспорт включает только перечисленные в манифесте оригиналы, миниатюры и публичные метаданные. Административного API в сайте нет. Избранное хранится в браузере посетителя, без учётных записей и передачи на сервер.
+Only allowlisted originals, thumbnails and public metadata are exported. There is no public administration API. Favorites stay in each visitor's browser, without accounts or server uploads.
 
-## Запуск и HTTPS
+## Start and HTTPS
 
 ```sh
 PUBLIC_GALLERY=/srv/memebooru/public-v1 \
   docker compose -f docker-compose.web.yml up -d --build
 ```
 
-Внешний HTTPS-прокси должен направлять запросы на `127.0.0.1:8080`. Пример для **отдельного** Caddy на хосте (замените домен):
+An external HTTPS proxy should forward to `127.0.0.1:8080`. Example for a **separate** Caddy on the host; substitute your domain:
 
 ```caddy
 gallery.example.org {
@@ -26,34 +26,32 @@ gallery.example.org {
 }
 ```
 
-При другом сервере-прокси используйте защищённое соединение между узлами, проверку сертификата и firewall с разрешёнными адресами. Не публикуйте адреса, ключи и инфраструктурные конфиги в репозитории приложения.
+If the proxy is on another machine, secure the connection between hosts with verified certificates or a private encrypted tunnel, and restrict firewall sources. Do not publish infrastructure addresses, keys or private configurations in the application repository.
 
 ## CDN
 
-- `/media/*` и `/thumbs/*`: имена содержат SHA-256, можно кэшировать на год (`immutable`).
-- `/catalogue.json`: короткий TTL 60 секунд.
-- HTML/JS/CSS: перепроверять после обновления (`no-cache`).
-- Сохраняйте заголовки `Cache-Control` origin. Не включайте глобальное кэширование всех ответов без отдельных правил.
-- HTTPS до origin и корректные Host/SNI задаются в панели конкретного CDN.
+- `/media/*` and `/thumbs/*`: SHA-256 filenames; cache for one year (`immutable`).
+- `/catalogue.json`: short 60-second TTL.
+- HTML/JS/CSS: revalidate after updates (`no-cache`).
+- Preserve the origin's `Cache-Control` headers; avoid a blanket cache rule.
+- Configure origin HTTPS and the correct Host/SNI for your CDN.
 
-Настройка посторонних протоколов и VPN-трафика не входит в конфигурацию этого репозитория.
+Unrelated protocols and VPN traffic are outside this repository's configuration.
 
-## Обновление и откат
+## Updates and rollback
 
-Публикуйте новую версию в отдельную папку `public-v2`, проверьте её локально, затем пересоздайте контейнер с новым `PUBLIC_GALLERY`. На одном Compose-сервисе это короткое переключение с возможным прерыванием активной загрузки; это не бесшовный rolling deploy. Для отката верните путь `public-v1`. Старую папку удаляйте после проверки и завершения старых загрузок.
+Publish into a separate `public-v2` directory, test it locally, then recreate the container with the new `PUBLIC_GALLERY`. A single Compose service may briefly interrupt active downloads during this switch; this is not a rolling deployment. Roll back by restoring `public-v1`. Remove old exports only after verification and completion of old downloads.
 
-При обновлении HTML/JS/CSS сбросьте их CDN-кэш; хешированные изображения не требуют сброса. Веб-галерея не изменяет свою коллекцию, поэтому её достаточно резервировать при публикации. Настройте резервные копии исходной нативной коллекции отдельно.
+Purge CDN HTML/JS/CSS caches when updating; hashed images do not require a purge. Back up each published export and back up the native collection separately.
 
-## Ресурсы
+## Resources and checks
 
-Статическая галерея не требует Swift или модели разметки на рабочем сервере. Контейнер ограничен 256 МиБ RAM и одним CPU; расход зависит от количества соединений и скорости отдачи. Диск origin нужен под оригиналы, миниатюры и запас для обновлений. Разметку и генерацию миниатюр выполняйте до развёртывания.
-
-Проверьте:
+The serving host needs neither Swift nor a tagging model. The container is limited to 256 MiB RAM and one CPU; actual usage depends on connections and throughput. Origin disk must hold originals, previews and room for updates. Generate tags and thumbnails before deployment.
 
 ```sh
 curl -I http://127.0.0.1:8080/
 curl -I http://127.0.0.1:8080/catalogue.json
-curl -I http://127.0.0.1:8080/collection.db # должно быть 404
+curl -I http://127.0.0.1:8080/collection.db # must return 404
 ```
 
-Docker пишет только ограниченный служебный журнал (3 × 10 МБ), временные каталоги находятся в tmpfs. Логирование запросов посетителей по умолчанию выключено.
+Docker logs are bounded to 3 × 10 MB; writable temporary directories use tmpfs. Visitor request logging is disabled by default.

@@ -144,7 +144,7 @@ struct MediaPlayer: View {
             if !isAudio {
                 Button { muted.toggle(); player.isMuted = muted } label: {
                     Image(systemName: muted ? "speaker.slash.fill" : "speaker.wave.2.fill").font(.system(size: 12)).foregroundStyle(ink).frame(width: 18)
-                }.buttonStyle(.plain).linkPointer().help(muted ? "Включить звук" : "Выключить звук")
+                }.buttonStyle(.plain).linkPointer().help(muted ? "Sound on" : "Sound off")
             }
         }
     }
