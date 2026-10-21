@@ -8,7 +8,7 @@ The gallery is read-only. Importing, editing and syncing remain in the native ap
 
 ## Run the web gallery
 
-Requires Docker Compose and a prepared public export containing `index.html`, `app.js`, `style.css`, `catalogue.json`, `media/` and `thumbs/`.
+Requires Docker Compose and a prepared public export containing `index.html`, `app.js`, `style.css`, `favicon.svg`, `catalogue.json`, `media/` and `thumbs/`.
 
 ```sh
 PUBLIC_GALLERY=/absolute/path/to/public-gallery \
