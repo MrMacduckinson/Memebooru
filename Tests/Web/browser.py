@@ -60,6 +60,14 @@ with sync_playwright() as p:
  page.locator('#collection').click();page.locator('#search').fill('nonexistent_test_word');page.locator('#search-form button').click();assert page.locator('#empty').is_visible()
  page.locator('#collection').click();page.locator('#tag-search').fill('sky');page.locator('#tag-list button').first.click();assert page.locator('#selected-tags button').count()==1
  page.locator('#collection').click()
+ page.locator('#tag-search').fill('metalheart');page.locator('#tag-list button').first.click()
+ expected=sum('metalheart' in item['tags'] for item in catalogue)
+ assert expected>0
+ for suffix in ['', ' -l', ' -llo', ' -llowe', ' -METALHEART']:
+  page.locator('#search').fill('metalheart'+suffix);page.locator('#search-form button').click()
+  count=0 if suffix==' -METALHEART' else expected
+  assert page.locator('#results').inner_text()==f"Found: {count:,} of {len(catalogue):,}"
+ page.locator('#collection').click()
  page.locator('#gallery').evaluate('el => el.scrollTop = el.scrollHeight')
  deadline=time.monotonic()+15
  while page.locator('.card').count()<=60 and time.monotonic()<deadline:time.sleep(.1)

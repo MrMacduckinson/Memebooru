@@ -22,7 +22,9 @@ export function matches(item, state) {
     [...state.tags].every((t) => item.tags.includes(t)) &&
     (!state.onlyFavorites || state.favorites.has(item.sha256)) &&
     tokens(state.query).every((t) =>
-      t.exclude ? !hay.includes(t.value) : hay.includes(t.value),
+      t.exclude
+        ? !item.tags.some((tag) => tag.toLocaleLowerCase("en") === t.value)
+        : hay.includes(t.value),
     )
   );
 }

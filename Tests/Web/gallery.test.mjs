@@ -74,3 +74,41 @@ test("only content-addressed image paths and HTTPS archive sources are accepted"
     assert.equal(safeSource(u), false);
   assert.equal(safeSource("https://frutigeraeroarchive.org/wallpapers"), true);
 });
+
+test("excluded tags match whole names, not substrings or title/category text", () => {
+  const picture = {
+    ...item,
+    title: "Yellow flower l",
+    category: "l",
+    tags: ["metalheart", "yellow", "flower"],
+  };
+  for (const suffix of ["l", "llo", "llowe", "unknown", "L"]) {
+    for (const tags of [new Set(), new Set(["metalheart"])]) {
+      assert.equal(
+        matches(picture, { ...state, query: `metalheart -${suffix}`, tags }),
+        true,
+      );
+    }
+  }
+  for (const query of [
+    "metalheart -yellow",
+    "metalheart -YELLOW",
+    "metalheart -flower",
+  ]) {
+    assert.equal(matches(picture, { ...state, query }), false);
+  }
+  assert.equal(
+    matches(
+      { ...picture, tags: [...picture.tags, "l"] },
+      { ...state, query: "metalheart -l" },
+    ),
+    false,
+  );
+  assert.equal(
+    matches(
+      { ...picture, tags: [...picture.tags, "L"] },
+      { ...state, query: "metalheart -l" },
+    ),
+    false,
+  );
+});
