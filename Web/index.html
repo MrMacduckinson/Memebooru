@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <meta name="theme-color" content="#354c46" />
+    <meta name="theme-color" content="#53655b" />
     <meta
       name="description"
-      content="Memebooru — коллекция обоев Frutiger Aero. Поиск по сюжетам, цветам и тегам, оригиналы в полном разрешении."
+      content="Memebooru — коллекция обоев Frutiger Aero с тегами и поиском."
     />
     <title>Memebooru · Frutiger Aero</title>
     <link rel="stylesheet" href="style.css" />
@@ -14,168 +14,194 @@
   </head>
   <body>
     <a class="skip" href="#gallery">К изображениям</a>
-    <header>
-      <div class="header-inner">
-        <a class="brand" href="./"
-          ><span class="brand-mark" aria-hidden="true">m</span>memebooru<span
-            class="edition"
-            >aero archive</span
-          ></a
-        >
-        <div class="header-actions">
-          <button id="favorites" aria-pressed="false">
-            ♡ Избранное <span id="fav-count">0</span></button
-          ><a
-            href="https://github.com/MrMacduckinson/Memebooru"
-            target="_blank"
-            rel="noopener noreferrer"
-            >Исходный код ↗</a
-          >
-        </div>
-      </div>
-    </header>
-    <div class="intro">
-      <div>
-        <p class="eyebrow">ОБОИ · ЦВЕТ · НОСТАЛЬГИЯ</p>
-        <h1>Маленькое окно<br />в <em>светлое будущее.</em></h1>
-        <p class="intro-copy">
-          Стекло, зелёные холмы и бесконечное небо.<br />Коллекция изображений
-          из Frutiger Aero Archive.
-        </p>
-      </div>
-      <div class="orb" aria-hidden="true">
-        <span>2000<br />∞</span>
-      </div>
-    </div>
-    <nav class="toolbar" aria-label="Поиск и вид">
+    <header class="app-header">
+      <button
+        id="filters-toggle"
+        aria-label="Открыть боковую панель"
+        aria-expanded="false"
+        aria-controls="filters"
+      >
+        ☰
+      </button>
+      <a class="brand" href="./"
+        ><span class="brand-mark" aria-hidden="true">m</span>memebooru<span
+          class="edition"
+          >aero archive</span
+        ></a
+      >
       <form id="search-form" role="search">
-        <label class="sr-only" for="search">Поиск по названию и тегам</label
-        ><input
+        <label class="sr-only" for="search">Поиск по названию и тегам</label>
+        <input
           id="search"
           type="search"
-          placeholder="Небо, вода, абстракция…"
+          placeholder='теги, "текст", -исключение'
           autocomplete="off"
-        /><button type="submit">Найти</button>
+        />
+        <button type="submit">Поиск</button>
       </form>
-      <button id="filters-toggle" aria-expanded="false" aria-controls="filters">
-        Фильтры</button
-      ><label class="sort-label"
-        >Порядок
-        <select id="sort">
-          <option value="source">В архиве</option>
-          <option value="resolution">Разрешение ↓</option>
-          <option value="name">Название</option>
-        </select></label
+      <span class="header-collection"
+        >Frutiger Aero Archive <span aria-hidden="true">›</span></span
       >
-    </nav>
+    </header>
     <div class="layout">
-      <aside id="filters">
+      <button
+        id="drawer-shade"
+        hidden
+        aria-label="Закрыть боковую панель"
+      ></button>
+      <aside id="filters" aria-label="Просмотр коллекции">
         <section>
-          <h2>Коллекция</h2>
-          <p id="collection-count">Загружаем каталог…</p>
+          <h2>Просмотр</h2>
+          <button id="collection" class="nav-row" aria-pressed="true">
+            <span aria-hidden="true">▧</span> Коллекция
+          </button>
+          <button id="favorites" class="nav-row" aria-pressed="false">
+            <span aria-hidden="true">♡</span> Избранное
+            <small id="fav-count">0</small>
+          </button>
+        </section>
+        <section>
+          <h2>Категория</h2>
+          <button id="pictures" class="category-row">
+            Изображения <small id="picture-count"></small>
+          </button>
+        </section>
+        <section>
+          <h2>Популярные теги <span id="tag-count"></span></h2>
+          <label class="sr-only" for="tag-search">Найти тег</label>
+          <input id="tag-search" type="search" placeholder="Найти тег…" />
+          <div id="tag-list"></div>
+        </section>
+        <details class="filter-options">
+          <summary>Фильтры</summary>
           <label for="category">Раздел архива</label
           ><select id="category">
             <option value="">Все разделы</option>
           </select>
-        </section>
-        <section>
-          <h2>Формат</h2>
           <label for="orientation">Ориентация</label
           ><select id="orientation">
             <option value="">Любая</option>
             <option value="landscape">Горизонтальная</option>
             <option value="portrait">Вертикальная</option>
-            <option value="square">Квадратная</option></select
-          ><label for="resolution">Минимальная ширина</label
+            <option value="square">Квадратная</option>
+          </select>
+          <label for="resolution">Минимальная ширина</label
           ><select id="resolution">
             <option value="0">Любая</option>
             <option value="1920">1920 пикс. · Full HD</option>
             <option value="2560">2560 пикс. · QHD</option>
             <option value="3840">3840 пикс. · 4K</option>
           </select>
-        </section>
-        <section>
-          <h2>Теги <span id="tag-count"></span></h2>
-          <label class="sr-only" for="tag-search">Найти тег</label
-          ><input id="tag-search" type="search" placeholder="Найти тег…" />
-          <div id="tag-list"></div>
-        </section>
-        <button id="reset" class="subtle">Сбросить фильтры</button>
-        <p class="aside-note">
-          Несколько тегов — точнее поиск.<br />В строке поиска можно исключать
-          слова: <code>-аниме</code>.
+          <label for="sort">Порядок</label
+          ><select id="sort">
+            <option value="source">В архиве</option>
+            <option value="resolution">Разрешение ↓</option>
+            <option value="name">Название</option>
+          </select>
+        </details>
+        <p id="collection-count" class="collection-pill">Загружаем каталог…</p>
+        <p class="attribution">
+          <a
+            href="https://frutigeraeroarchive.org/wallpapers"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Источник изображений ↗</a
+          ><br />Права на изображения остаются у авторов.<br /><a
+            href="https://github.com/MrMacduckinson/Memebooru"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Код · BSD-2-Clause ↗</a
+          >
         </p>
       </aside>
-      <main id="gallery">
-        <div class="results-heading">
-          <div>
-            <h2>Обои</h2>
-            <p id="results" role="status" aria-live="polite">
-              Открываем коллекцию…
-            </p>
+      <div class="workspace">
+        <main id="gallery" tabindex="-1">
+          <div class="page-header">
+            <div class="title-row">
+              <h1 id="page-title">Коллекция</h1>
+              <p id="results" role="status" aria-live="polite">
+                Открываем коллекцию…
+              </p>
+            </div>
+            <button id="reset">Очистить поиск</button>
           </div>
-          <span class="small-label">ОРИГИНАЛЬНОЕ РАЗРЕШЕНИЕ</span>
-        </div>
-        <div id="selected-tags"></div>
-        <div id="grid" class="grid"></div>
-        <div id="empty" hidden>
-          <h3>Ничего не нашлось</h3>
-          <p>Попробуйте другие слова или уберите несколько фильтров.</p>
-        </div>
-        <nav id="pagination" aria-label="Страницы">
-          <button id="previous">← Назад</button><span id="page-label"></span
-          ><button id="next">Далее →</button>
-        </nav>
-        <noscript
-          >Для поиска и просмотра каталога включите JavaScript.</noscript
+          <div id="selected-tags"></div>
+          <div id="grid" class="grid"></div>
+          <div id="empty" hidden>
+            <h2>Ничего не найдено</h2>
+            <p>Попробуйте другие теги или сократите запрос.</p>
+          </div>
+          <nav id="pagination" aria-label="Загрузка изображений">
+            <button id="load-more">Показать ещё</button
+            ><span id="page-label"></span>
+          </nav>
+          <noscript
+            >Для поиска и просмотра каталога включите JavaScript.</noscript
+          >
+        </main>
+        <section
+          id="detail"
+          hidden
+          aria-labelledby="detail-title"
+          tabindex="-1"
         >
-      </main>
+          <nav class="breadcrumb" aria-label="Навигация по коллекции">
+            <button id="close">‹ Коллекция</button><span>/</span
+            ><button id="detail-category">Изображения</button>
+          </nav>
+          <div class="detail-columns">
+            <div class="detail-main">
+              <div class="media-stage"><img id="full-image" alt="" /></div>
+              <div class="post-heading">
+                <span class="kind-tile" aria-hidden="true">▧</span>
+                <div>
+                  <h1 id="detail-title"></h1>
+                  <p>
+                    в категории
+                    <button id="image-category" class="text-link">
+                      Изображения
+                    </button>
+                  </p>
+                </div>
+              </div>
+              <section class="section-block">
+                <h2>Теги</h2>
+                <div class="tag-row">
+                  <span>Обычные</span>
+                  <div id="detail-tags" class="chips"></div>
+                </div>
+                <p class="tag-note">
+                  Автоматическая разметка; сюжетные теги могут быть неточными.
+                </p>
+              </section>
+            </div>
+            <div class="detail-side">
+              <section class="section-block">
+                <h2>Ещё из коллекции</h2>
+                <div class="detail-nav">
+                  <button id="detail-prev" aria-label="Предыдущее изображение">
+                    ← Назад</button
+                  ><span id="detail-position"></span
+                  ><button id="detail-next" aria-label="Следующее изображение">
+                    Далее →
+                  </button>
+                </div>
+              </section>
+              <div class="detail-actions">
+                <button id="favorite-detail">♡ В избранное</button
+                ><a id="download" download>↓ Скачать оригинал</a
+                ><a id="source" target="_blank" rel="noopener noreferrer"
+                  >↗ Страница источника</a
+                >
+              </div>
+              <section class="section-block">
+                <h2>Подробности</h2>
+                <dl id="detail-meta"></dl>
+              </section>
+            </div>
+          </div>
+        </section>
+      </div>
     </div>
-    <footer>
-      <span
-        >memebooru <span class="footer-dot">●</span> a place for your
-        pictures</span
-      >
-      <p>
-        Изображения:
-        <a
-          href="https://frutigeraeroarchive.org/wallpapers"
-          target="_blank"
-          rel="noopener noreferrer"
-          >Frutiger Aero Archive ↗</a
-        >. Права остаются у авторов. BSD-2-Clause относится к коду приложения.
-      </p>
-    </footer>
-    <dialog id="detail" aria-labelledby="detail-title">
-      <button id="close" class="close" aria-label="Закрыть">×</button>
-      <div class="detail-image">
-        <img id="full-image" alt="" />
-        <div class="detail-nav">
-          <button id="detail-prev" aria-label="Предыдущее изображение">←</button
-          ><span id="detail-position"></span
-          ><button id="detail-next" aria-label="Следующее изображение">
-            →
-          </button>
-        </div>
-      </div>
-      <div class="detail-info">
-        <p class="eyebrow">FRUTIGER AERO ARCHIVE</p>
-        <h2 id="detail-title"></h2>
-        <p id="detail-meta"></p>
-        <div class="detail-actions">
-          <a id="download" class="primary" download>↓ Скачать оригинал</a
-          ><button id="favorite-detail">♡ В избранное</button>
-        </div>
-        <h3>Теги</h3>
-        <div id="detail-tags" class="chips"></div>
-        <p class="tag-note">
-          Сюжетные теги предложены локальной моделью; возможны неточности.
-        </p>
-        <a id="source" target="_blank" rel="noopener noreferrer"
-          >Страница источника ↗</a
-        >
-        <p class="detail-hint">← → — листать · Esc — закрыть</p>
-      </div>
-    </dialog>
   </body>
 </html>

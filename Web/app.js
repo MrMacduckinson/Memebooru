@@ -65,7 +65,8 @@ if (typeof document !== "undefined") {
   let items = [],
     filtered = [],
     current = -1,
-    lastFocus = null;
+    lastFocus = null,
+    galleryScroll = 0;
   try {
     const saved = JSON.parse(
       localStorage.getItem("memebooru.favorites") || "[]",
@@ -85,6 +86,9 @@ if (typeof document !== "undefined") {
     el.addEventListener("click", action);
     return el;
   }
+  function detailOpen() {
+    return !$("detail").hidden;
+  }
   function favorite(item) {
     const id = item.sha256;
     state.favorites.has(id)
@@ -97,7 +101,7 @@ if (typeof document !== "undefined") {
       );
     } catch {}
     render();
-    if ($("detail").open) {
+    if (detailOpen()) {
       const index = filtered.findIndex((x) => x.sha256 === id);
       if (index < 0) close();
       else show(id);
@@ -111,8 +115,11 @@ if (typeof document !== "undefined") {
     $("favorite-detail").setAttribute("aria-pressed", String(saved));
   }
   function toggleTag(tag) {
+    close();
+    setDrawer(false);
     state.tags.has(tag) ? state.tags.delete(tag) : state.tags.add(tag);
     state.page = 1;
+    $("gallery").scrollTop = 0;
     render();
   }
   function renderTags() {
@@ -125,16 +132,16 @@ if (typeof document !== "undefined") {
       ...[...counts]
         .filter(([tag]) => tag.toLocaleLowerCase("ru").includes(query))
         .sort((a, b) => b[1] - a[1])
-        .slice(0, 100)
+        .slice(0, query ? 100 : 16)
         .map(([tag, n]) => {
-          const b = button(tag, () => toggleTag(tag));
-          b.append(element("small", n));
+          const b = button("", () => toggleTag(tag));
+          b.append(element("span", tag), element("small", n));
           b.setAttribute("aria-pressed", String(state.tags.has(tag)));
           return b;
         }),
     );
   }
-  function render() {
+  function render(append = false) {
     filtered = items.filter((item) => matches(item, state));
     if (state.sort === "resolution")
       filtered.sort((a, b) => b.width * b.height - a.width * a.height);
@@ -142,6 +149,23 @@ if (typeof document !== "undefined") {
       filtered.sort((a, b) => a.title.localeCompare(b.title, "ru"));
     const pages = Math.max(1, Math.ceil(filtered.length / PAGE));
     state.page = Math.min(state.page, pages);
+    $("page-title").textContent = state.onlyFavorites
+      ? "Избранное"
+      : state.query ||
+          state.tags.size ||
+          state.category ||
+          state.orientation ||
+          state.resolution
+        ? "Поиск"
+        : "Коллекция";
+    $("reset").hidden = !(
+      state.query ||
+      state.tags.size ||
+      state.category ||
+      state.orientation ||
+      state.resolution
+    );
+    $("collection").setAttribute("aria-pressed", String(!state.onlyFavorites));
     $("results").textContent =
       `Найдено: ${filtered.length.toLocaleString("ru")} из ${items.length.toLocaleString("ru")}`;
     $("fav-count").textContent = state.favorites.size;
@@ -149,49 +173,43 @@ if (typeof document !== "undefined") {
     $("selected-tags").replaceChildren(
       ...[...state.tags].map((t) => button(t + " ×", () => toggleTag(t))),
     );
-    $("grid").replaceChildren(
-      ...filtered
-        .slice((state.page - 1) * PAGE, state.page * PAGE)
-        .map((item) => {
-          const card = element("article", undefined, "card");
-          const open = button("", () => show(item.sha256), "card-open");
-          open.setAttribute("aria-label", "Открыть: " + item.title);
-          const img = element("img");
-          img.src = item.thumb;
-          img.alt = item.title;
-          img.loading = "lazy";
-          img.decoding = "async";
-          img.width = 480;
-          img.height = 336;
-          open.append(img);
-          const text = element("div", undefined, "card-text");
-          text.append(element("h3", item.title));
-          const meta = element("div", undefined, "meta");
-          meta.append(
-            element("span", `${item.width} × ${item.height}`),
-            element("span", `${item.tags.length} тег.`),
-          );
-          text.append(meta);
-          open.append(text);
-          const heart = button(
-            state.favorites.has(item.sha256) ? "♥" : "♡",
-            () => favorite(item),
-            "heart",
-          );
-          heart.setAttribute("aria-label", "Избранное: " + item.title);
-          heart.setAttribute(
-            "aria-pressed",
-            String(state.favorites.has(item.sha256)),
-          );
-          card.append(open, heart);
-          return card;
-        }),
-    );
+    const cards = filtered
+      .slice(append ? (state.page - 1) * PAGE : 0, state.page * PAGE)
+      .map((item) => {
+        const card = element("article", undefined, "card");
+        const open = button("", () => show(item.sha256), "card-open");
+        open.setAttribute("aria-label", "Открыть: " + item.title);
+        const img = element("img");
+        img.src = item.thumb;
+        img.alt = item.title;
+        img.loading = "lazy";
+        img.decoding = "async";
+        img.width = item.width;
+        img.height = item.height;
+        const box = element("div", undefined, "thumb-box");
+        box.append(img);
+        open.append(box);
+        const text = element("div", undefined, "card-text");
+        text.append(
+          element("h3", item.tags.slice(0, 3).join(" ") || item.title),
+        );
+        const meta = element("div", undefined, "meta");
+        meta.append(
+          element("span", "в "),
+          document.createTextNode("Изображения"),
+        );
+        text.append(meta);
+        open.append(text);
+        card.append(open);
+        return card;
+      });
+    if (append) $("grid").append(...cards);
+    else $("grid").replaceChildren(...cards);
     $("empty").hidden = filtered.length > 0;
     $("pagination").hidden = filtered.length === 0;
-    $("page-label").textContent = `${state.page} / ${pages}`;
-    $("previous").disabled = state.page === 1;
-    $("next").disabled = state.page === pages;
+    $("page-label").textContent =
+      `${Math.min(state.page * PAGE, filtered.length)} из ${filtered.length}`;
+    $("load-more").hidden = state.page >= pages;
     renderTags();
     const params = new URLSearchParams();
     if (state.query) params.set("q", state.query);
@@ -214,9 +232,24 @@ if (typeof document !== "undefined") {
     const item = filtered[current];
     $("full-image").src = item.file;
     $("full-image").alt = item.title;
-    $("detail-title").textContent = item.title;
-    $("detail-meta").textContent =
-      `${item.width} × ${item.height} пикселей · ${(item.bytes / 1048576).toLocaleString("ru", { maximumFractionDigits: 2 })} МБ · ${item.category.replaceAll("_", " ")}`;
+    $("detail-title").textContent =
+      item.tags.slice(0, 4).join(" ") || item.title;
+    $("detail-meta").replaceChildren(
+      ...[
+        ["Файл", item.title],
+        ["Раздел", item.category.replaceAll("_", " ")],
+        ["Разрешение", `${item.width} × ${item.height}`],
+        [
+          "Размер файла",
+          `${(item.bytes / 1048576).toLocaleString("ru", { maximumFractionDigits: 2 })} МБ`,
+        ],
+        ["Формат", item.file.split(".").pop().toUpperCase()],
+        ["SHA-256", item.sha256.slice(0, 12) + "…"],
+      ].flatMap(([key, value]) => [
+        element("dt", key + ":"),
+        element("dd", value),
+      ]),
+    );
     $("download").href = item.file;
     $("download").download = item.file.split("/").pop();
     $("source").href = item.sourcePage;
@@ -233,37 +266,38 @@ if (typeof document !== "undefined") {
     $("detail-position").textContent = `${current + 1} / ${filtered.length}`;
     $("detail-prev").disabled = current === 0;
     $("detail-next").disabled = current === filtered.length - 1;
-    if (!$("detail").open) {
+    if (!detailOpen()) {
       lastFocus = document.activeElement;
-      $("detail").showModal();
-      document.body.style.overflow = "hidden";
+      galleryScroll = $("gallery").scrollTop;
+      $("gallery").hidden = true;
+      $("detail").hidden = false;
+      $("detail").focus();
+      if (location.hash.slice(1) !== id)
+        history.pushState(
+          null,
+          "",
+          location.pathname + location.search + "#" + id,
+        );
     }
+    $("detail").scrollTop = 0;
     history.replaceState(
       null,
       "",
-      location.pathname + location.search + "#" + item.sha256,
+      location.pathname + location.search + "#" + id,
     );
   }
   function close() {
-    $("detail").close();
-  }
-  $("detail").addEventListener("close", () => {
-    document.body.style.overflow = "";
+    if (!detailOpen()) return;
+    $("detail").hidden = true;
+    $("gallery").hidden = false;
+    $("gallery").scrollTop = galleryScroll;
     history.replaceState(null, "", location.pathname + location.search);
-    if (lastFocus?.isConnected) lastFocus.focus();
-  });
+    if (lastFocus?.isConnected) lastFocus.focus({ preventScroll: true });
+  }
   $("close").onclick = close;
-  $("detail").addEventListener("click", (e) => {
-    if (e.target === $("detail")) {
-      const r = $("detail").getBoundingClientRect();
-      if (
-        e.clientX < r.left ||
-        e.clientX > r.right ||
-        e.clientY < r.top ||
-        e.clientY > r.bottom
-      )
-        close();
-    }
+  window.addEventListener("popstate", () => {
+    if (location.hash) show(location.hash.slice(1));
+    else close();
   });
   function step(delta) {
     const item = filtered[current + delta];
@@ -273,9 +307,10 @@ if (typeof document !== "undefined") {
   $("detail-next").onclick = () => step(1);
   document.addEventListener("keydown", (e) => {
     if (
-      $("detail").open &&
+      detailOpen() &&
       !["INPUT", "TEXTAREA", "SELECT"].includes(e.target.tagName)
     ) {
+      if (e.key === "Escape") close();
       if (e.key === "ArrowLeft") {
         e.preventDefault();
         step(-1);
@@ -288,28 +323,40 @@ if (typeof document !== "undefined") {
   });
   $("search-form").onsubmit = (e) => {
     e.preventDefault();
+    close();
+    setDrawer(false);
     state.query = $("search").value;
     state.page = 1;
+    $("gallery").scrollTop = 0;
     render();
   };
   $("search").addEventListener("search", () => {
+    close();
     state.query = $("search").value;
     state.page = 1;
+    $("gallery").scrollTop = 0;
     render();
   });
   for (const key of ["category", "orientation", "resolution", "sort"])
     $(key).onchange = () => {
+      close();
       state[key] = key === "resolution" ? Number($(key).value) : $(key).value;
       state.page = 1;
+      $("gallery").scrollTop = 0;
       render();
     };
   $("favorites").onclick = () => {
+    close();
+    setDrawer(false);
     state.onlyFavorites = !state.onlyFavorites;
     state.page = 1;
+    $("gallery").scrollTop = 0;
     render();
   };
   $("tag-search").oninput = renderTags;
   $("reset").onclick = () => {
+    close();
+    setDrawer(false);
     state.query = "";
     state.category = "";
     state.orientation = "";
@@ -317,24 +364,43 @@ if (typeof document !== "undefined") {
     state.tags.clear();
     state.onlyFavorites = false;
     state.page = 1;
+    $("gallery").scrollTop = 0;
     for (const k of ["search", "category", "orientation", "tag-search"])
       $(k).value = "";
     $("resolution").value = "0";
     render();
   };
-  for (const [id, delta] of [
-    ["previous", -1],
-    ["next", 1],
+  for (const id of [
+    "collection",
+    "pictures",
+    "detail-category",
+    "image-category",
   ])
-    $(id).onclick = () => {
-      state.page += delta;
-      render();
-      $("gallery").scrollIntoView({ behavior: "instant" });
-    };
-  $("filters-toggle").onclick = () => {
-    const open = $("filters").classList.toggle("visible");
+    $(id).onclick = () => $("reset").click();
+  function loadMore() {
+    if (state.page * PAGE >= filtered.length || detailOpen()) return;
+    state.page += 1;
+    render(true);
+  }
+  $("load-more").onclick = loadMore;
+  const observer = new IntersectionObserver(
+    ([entry]) => {
+      if (entry.isIntersecting) loadMore();
+    },
+    { root: $("gallery"), rootMargin: "150px" },
+  );
+  observer.observe($("pagination"));
+  function setDrawer(open) {
+    $("filters").classList.toggle("visible", open);
     $("filters-toggle").setAttribute("aria-expanded", String(open));
-  };
+    $("drawer-shade").hidden = !open;
+  }
+  $("filters-toggle").onclick = () =>
+    setDrawer(!$("filters").classList.contains("visible"));
+  $("drawer-shade").onclick = () => setDrawer(false);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") setDrawer(false);
+  });
   try {
     const response = await fetch("catalogue.json");
     if (!response.ok) throw new Error("catalogue unavailable");
@@ -361,8 +427,9 @@ if (typeof document !== "undefined") {
       o.value = cat;
       $("category").append(o);
     }
+    $("picture-count").textContent = items.length.toLocaleString("ru");
     $("collection-count").textContent =
-      `${items.length.toLocaleString("ru")} изображений · разделов: ${categories.length}`;
+      `Aero Archive · публикаций: ${items.length.toLocaleString("ru")}`;
     const p = new URLSearchParams(location.search);
     state.query = p.get("q") || "";
     state.category = p.get("category") || "";
