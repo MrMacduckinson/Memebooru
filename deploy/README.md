@@ -30,16 +30,20 @@ If the proxy is on another machine, secure the connection between hosts with ver
 
 ## CDN
 
-The Cloud.ru CDN deployment target is `https://memebooru.sinista.party/`. Verify the live endpoint before announcing deployment complete.
+The public gallery is live at [memebooru.sinista.party](https://memebooru.sinista.party/) through Cloud.ru CDN. On October 21, 2026, server-side verification passed for edge and origin TLS, desktop/mobile browser navigation, search, tags, favorites, delayed-image replacement and private-path 404 responses. UI/catalogue hashes matched the approved export, all 6,002 catalogue records were preserved, and all 64 initial browser requests used the public hostname.
 
 Serve the export at the domain root. Catalogue, script, stylesheet and media URLs use the current site's origin; the favicon uses `/favicon.svg`. No rewrite to the CDN's technical hostname or additional CORS permissions is needed. Source-attribution links intentionally lead to Frutiger Aero Archive.
 
 Configure HTTPS for both browser-to-CDN and CDN-to-origin connections. The CDN must verify the origin certificate and send the origin hostname as Host and TLS SNI. Preserve request paths and ensure redirects keep visitors on the public hostname. The internal gallery listener can remain HTTP behind the secured reverse proxy/tunnel.
 
+Origin cache policy and recommended CDN behavior:
+
 - `/media/*` and `/thumbs/*`: SHA-256 filenames; cache for one year (`immutable`).
 - `/catalogue.json`: short 60-second TTL.
 - HTML/JS/CSS/favicon: revalidate after updates (`no-cache`).
 - Preserve the origin's `Cache-Control` headers; avoid a blanket cache rule.
+
+Observed on October 21, 2026: Cloud.ru returned `Cache-Control: max-age=1` for the index while the origin sent `no-cache`. This differs from the recommended policy above; the server deployment did not change CDN edge cache settings. Recheck edge responses when configuring cache rules or publishing updates.
 
 Unrelated protocols and VPN traffic are outside this repository's configuration.
 
