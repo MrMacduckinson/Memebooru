@@ -37,8 +37,13 @@
           type="search"
           placeholder='tags, "text", -exclude'
           autocomplete="off"
+          role="combobox"
+          aria-autocomplete="list"
+          aria-expanded="false"
+          aria-controls="search-suggestions"
         />
         <button type="submit">Search</button>
+        <ul id="search-suggestions" role="listbox" aria-label="Tag suggestions" hidden></ul>
       </form>
       <span class="header-collection"
         >Frutiger Aero Archive <span aria-hidden="true">›</span></span
