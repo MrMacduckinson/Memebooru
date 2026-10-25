@@ -6,8 +6,6 @@ The web gallery exposes **one explicitly published collection**. Search titles a
 
 The gallery is read-only. Importing, editing and syncing remain in the native app/CLI. A static server and CDN can serve the public export without exposing the database.
 
-Public gallery: [Memebooru Aero Archive](https://gallery.example.org/), served over HTTPS through Cloud.ru CDN.
-
 ## Run the web gallery
 
 Requires Docker Compose and a prepared public export containing `index.html`, `app.js`, `style.css`, `favicon.svg`, `catalogue.json`, `media/` and `thumbs/`.
