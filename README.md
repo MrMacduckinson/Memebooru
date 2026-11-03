@@ -2,7 +2,7 @@
 
 A local collection of pictures, GIFs, videos, audio, text and tweets with tags, search, staging, deduplication and sync. The native macOS/iOS application and web gallery use English.
 
-The web gallery exposes **one explicitly published collection**. Search titles and tags with prefix suggestions (including `-` exclusions; select with the pointer or arrow keys and Enter), combine tags, exclude exact tag names (`-anime`; `-l` does not exclude `yellow`), filter by category/orientation/resolution, sort, save browser-local favorites and download originals. The layout follows the native application: header search, a 208 px sidebar, uncropped thumbnails in 150 px areas, and an inline detail page. Images load progressively as you scroll. On phones, the sidebar becomes a drawer. Arrow keys navigate images; Escape and browser Back return to the gallery. Changing images clears the previous image immediately while the next loads.
+The web gallery exposes **one explicitly published collection**. Search titles and tags with prefix suggestions (including `-` exclusions; select with a click/tap, or Tab/Shift+Tab or arrow keys followed by Enter; Escape dismisses suggestions), combine tags, exclude exact tag names (`-anime`; `-l` does not exclude `yellow`), filter by category/orientation/resolution, sort, save browser-local favorites and download originals. The layout follows the native application: header search, a 208 px sidebar, uncropped thumbnails in 150 px areas, and an inline detail page. Images load progressively as you scroll. On phones, the sidebar becomes a drawer. Arrow keys navigate images; Escape and browser Back return to the gallery. Changing images clears the previous image immediately while the next loads.
 
 The gallery is read-only. Importing, editing and syncing remain in the native app/CLI. A static server and CDN can serve the public export without exposing the database.
 
@@ -90,6 +90,8 @@ python3 -m unittest discover -s Tests/Web -p 'test_*.py' # requires Pillow
 # Optional browser checks: pip install playwright && playwright install chromium
 python3 Tests/Web/browser.py http://127.0.0.1:8080
 python3 Tests/Web/spacing.py http://127.0.0.1:8080
+python3 Tests/Web/search_ux.py http://127.0.0.1:8080 # touch, Tab, caret and IME
+# Install WebKit too and set SEARCH_BROWSERS=chromium,webkit to check both engines.
 ```
 
 Gallery tests cover staging, idempotent imports, hashes, path traversal, partial-publication refusal and private-data exclusion. Browser checks cover navigation, progressive loading, delayed-image replacement, mobile layout and public-path boundaries. Spacing checks measure text insets, header gaps, content padding and overflow in gallery/detail views at 11 viewport widths from 320 to 1920 px.

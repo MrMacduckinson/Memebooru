@@ -352,7 +352,7 @@ if (typeof document !== "undefined") {
     }
   });
   const search = $("search"), suggestions = $("search-suggestions");
-  let completions = [], activeSuggestion = -1;
+  let completions = [], activeSuggestion = -1, suggestionPointer = null, composing = false;
   function hideSuggestions() {
     suggestions.hidden = true;
     search.setAttribute("aria-expanded", "false");
@@ -363,12 +363,13 @@ if (typeof document !== "undefined") {
     search.value = completions[index].query;
     hideSuggestions();
     $("search-form").requestSubmit();
-    search.focus();
+    search.focus({ preventScroll: true });
+    search.setSelectionRange(search.value.length, search.value.length);
   }
   function updateSuggestions() {
     hideSuggestions();
     // Complete the final token, matching the native search field.
-    completions = search.selectionStart === search.value.length
+    completions = !composing && search.selectionStart === search.selectionEnd && search.selectionEnd === search.value.length
       ? tagSuggestions(search.value, counts) : [];
     if (document.activeElement !== search || !completions.length) return;
     suggestions.replaceChildren(...completions.map((item, index) => {
@@ -377,7 +378,13 @@ if (typeof document !== "undefined") {
       row.setAttribute("role", "option");
       row.setAttribute("aria-selected", "false");
       row.append(element("span", item.tag), element("small", item.count));
-      row.onpointerdown = (event) => event.preventDefault();
+      // Keep mouse focus in the combobox. Touch must retain native scrolling
+      // and click synthesis; a blur during a tap must not remove its target.
+      row.tabIndex = -1;
+      row.onpointerdown = (event) => {
+        suggestionPointer = event.pointerId;
+        if (event.pointerType === "mouse") event.preventDefault();
+      };
       row.onclick = () => completeSuggestion(index);
       return row;
     }));
@@ -387,19 +394,71 @@ if (typeof document !== "undefined") {
   search.addEventListener("input", updateSuggestions);
   search.addEventListener("focus", updateSuggestions);
   search.addEventListener("click", updateSuggestions);
-  search.addEventListener("blur", hideSuggestions);
+  search.addEventListener("compositionstart", () => {
+    composing = true;
+    hideSuggestions();
+  });
+  search.addEventListener("compositionend", () => {
+    composing = false;
+    updateSuggestions();
+  });
+  search.addEventListener("blur", (event) => {
+    if (suggestionPointer === null && !suggestions.contains(event.relatedTarget)) hideSuggestions();
+  });
+  document.addEventListener("pointerdown", (event) => {
+    if (event.target !== search && !suggestions.contains(event.target)) hideSuggestions();
+  });
+  document.addEventListener("pointerup", (event) => {
+    if (event.pointerId === suggestionPointer) suggestionPointer = null;
+  });
+  document.addEventListener("pointercancel", (event) => {
+    if (event.pointerId === suggestionPointer) {
+      // Native touch scrolling cancels the pointer: keep the list scrollable.
+      suggestionPointer = null;
+    }
+  });
+  document.addEventListener("focusin", (event) => {
+    if (event.target !== search && !suggestions.contains(event.target)) hideSuggestions();
+  });
+  window.addEventListener("blur", () => {
+    suggestionPointer = null;
+    hideSuggestions();
+  });
+  // Moving the caret or selecting text invalidates final-token suggestions.
+  search.addEventListener("keyup", (event) => {
+    if (["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) updateSuggestions();
+  });
+  search.addEventListener("select", () => {
+    if (search.selectionStart !== search.value.length || search.selectionEnd !== search.value.length) hideSuggestions();
+  });
+  function highlightSuggestion(index) {
+    activeSuggestion = index;
+    [...suggestions.children].forEach((row, i) => row.setAttribute("aria-selected", String(i === index)));
+    if (index < 0) {
+      search.removeAttribute("aria-activedescendant");
+    } else {
+      const row = suggestions.children[index];
+      search.setAttribute("aria-activedescendant", row.id);
+      row.scrollIntoView({ block: "nearest" });
+    }
+  }
   search.addEventListener("keydown", (event) => {
-    if (event.isComposing || suggestions.hidden) return;
+    if (event.isComposing || composing || suggestions.hidden) return;
     if (event.key === "Escape") {
       event.preventDefault();
       hideSuggestions();
     } else if (["ArrowDown", "ArrowUp"].includes(event.key)) {
       event.preventDefault();
-      activeSuggestion = (activeSuggestion + (event.key === "ArrowDown" ? 1 : activeSuggestion < 0 ? 0 : -1) + completions.length) % completions.length;
-      [...suggestions.children].forEach((row, index) => row.setAttribute("aria-selected", String(index === activeSuggestion)));
-      const row = suggestions.children[activeSuggestion];
-      search.setAttribute("aria-activedescendant", row.id);
-      row.scrollIntoView({ block: "nearest" });
+      highlightSuggestion((activeSuggestion + (event.key === "ArrowDown" ? 1 : activeSuggestion < 0 ? 0 : -1) + completions.length) % completions.length);
+    } else if (event.key === "Tab") {
+      const next = activeSuggestion + (event.shiftKey ? -1 : 1);
+      if (next >= -1 && next < completions.length && !(event.shiftKey && activeSuggestion < 0)) {
+        event.preventDefault();
+        highlightSuggestion(next);
+      } else {
+        // Leave the list naturally at either end; never trap keyboard focus.
+        hideSuggestions();
+      }
     } else if (event.key === "Enter" && activeSuggestion >= 0) {
       event.preventDefault();
       completeSuggestion(activeSuggestion);
@@ -416,6 +475,7 @@ if (typeof document !== "undefined") {
     render();
   };
   $("search").addEventListener("search", () => {
+    hideSuggestions();
     close();
     state.query = $("search").value;
     state.page = 1;

@@ -764,3 +764,19 @@ h1 {
   background: #52685a;
 }
 #search-suggestions small { color: #bdcbb7; }
+
+/* Avoid mobile focus zoom without disabling pinch-to-zoom accessibility. */
+@media (max-width: 760px), (any-pointer: coarse) {
+  input,
+  select {
+    font-size: 16px;
+  }
+  #search-suggestions li {
+    min-height: 44px;
+    align-items: center;
+    touch-action: pan-y;
+  }
+}
+#search-suggestions {
+  overscroll-behavior: contain;
+}
